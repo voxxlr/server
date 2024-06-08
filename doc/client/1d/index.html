@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
+    <title>Voxxlr</title>
+    <link rel="canonical" href="https://www.voxxlr.com/index.html">
+    <meta charset="utf-8" />
+
+
+    <script>
+        
+        window.addEventListener("load", function() 
+        {
+            document.addEventListener('contextmenu', event => event.preventDefault());
+            
+            var config = {{#content}}{{{.}}}{{/content}}   {{^content}}null{{/content}};
+            
+            var viewer = new V1.Viewer(config);
+            if (config != null)
+            {       	
+                viewer.load(config.id, new M.Image(config, V.viewerCb));
+            }
+       });
+    
+    </script>
+        
+    
+    <style>
+    
+        body { overflow: hidden;  touch-action: none; }
+        canvas { position: absolute; top: 0px; left: 0px; width:100%; height:100% }
+        
+    </style>
+
+</head>
+
+
+<body>
+
+    <canvas id="canvas3D"></canvas>
+    <canvas id="canvas2D" class="events"></canvas> 
+   
+</body>
+
+
+<script src="/geom/geom.js"></script>
+<script src="/gl/gl.js"></script>
+<script src="/gl/shader.js"></script>
+<script src="/gl/object.js"></script>
+<script src="/index.js"></script>
+<script src="/overlay/overlay.js"></script>
+<script src="/overlay/anchor.js"></script>
+<script src="/overlay/component.js"></script>
+<script src="/overlay/point.js"></script>
+<script src="/1d/index.js"></script>
+<script src="/1d/image.js"></script>
+
+</html>
+

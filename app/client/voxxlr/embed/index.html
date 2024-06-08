@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link rel="canonical" href="https://www.voxxlr.com">
+    <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
+    
+    {{#og}}
+    <title>{{title}}</title>
+    <meta property="og:title" content="{{title}}" />
+    <meta property="og:image" content="{{{image}}}" />
+    <meta property="og:image:width" content="{{image:width}}" />
+    <meta property="og:image:height" content="{{image:height}}" />
+    <meta property="og:alt" content="Link to Voxxlr Viewer" />
+    <meta property="og:type" content="video.other" />
+    <meta property="og:description" content="{{description}}" />    
+    <meta property="og:site_name" content="Voxxlr" />
+    <meta property="og:url" content="{{{url}}}" />
+    {{/og}}
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+
+    {{^dataset}}
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    <script src="{{{app_domain}}}/ui.js"></script>
+    <script src="{{{app_domain}}}/vx-inventory.js"></script>
+    {{/dataset}}
+    
+    <script src="{{{app_domain}}}/vx-viewer.js"></script>
+     
+    <script>
+    
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        window.addEventListener("load", async (event) => 
+        {
+            var viewer = document.querySelector("vx-viewer");
+  
+            viewer.on("viewer.load",  async (args)=>
+            {
+                let div = document.querySelector("ul");
+                let template = document.querySelector("template");
+                let viewpoints = args.meta.viewpoints || [];
+                viewpoints.forEach((viewpoint) => 
+                {
+                    let entry = template.content.cloneNode(true);
+                    entry.firstElementChild.addEventListener('click', (event) => 
+                    {
+                        let selected = document.querySelector("li.selected");
+                        if (selected)
+                        {
+                            selected.classList.remove("selected");
+                        }
+                        event.currentTarget.classList.add("selected");
+                        
+                        let index = Array.prototype.indexOf.call(event.currentTarget.parentNode.children, event.currentTarget);
+                        viewer.post("viewpoint", viewpoints[index]);
+                    });
+                    div.appendChild(entry);
+                });
+                
+                if (viewpoints.length)
+                {
+                    div.firstElementChild.classList.add("selected");
+                    viewer.post("viewpoint", viewpoints[0]);
+                }
+                /*
+                for (var id in args.meta.polygon || {})
+                {
+                    viewer.post("polygon.create", args.meta.polygon[id]);
+                }
+                for (var id in args.meta.line || {})
+                {
+                    viewer.post("line.create", args.meta.line[id]);
+                }
+                for (var id in args.meta.point || {})
+                {
+                    viewer.post("point.create", args.meta.point[id]);
+                }
+                
+                for (var id in args.meta.import || {})
+                {
+                    await fetch(`/lookup/${args.meta.import[id].document}`, 
+                    { 
+                        method: 'POST', 
+                        headers: new Headers({
+                         'x-api-key': "{{{key}}}", 
+                         'Content-Type': "application/json",
+                        }),
+                        body: JSON.stringify({})
+                    }).then(async (response) =>
+                    {
+                        let dataset = await response.json();
+                        await viewer.post("import.create", dataset, args.meta.import[id]);
+                    });
+                }
+                    */
+                let selected =  document.querySelector("li.selected");
+                if (selected)
+                {
+                    let index = Array.prototype.indexOf.call(selected.parentNode.children, selected);
+                    viewer.post("viewpoint", viewpoints[index]);
+                }
+                else
+                {
+                    viewer.post("controller.set", { name: "orbiter" });
+                }
+            })
+            
+            viewer.on("viewer.unload",  async (args)=>
+            {
+                let div = document.querySelector("ul");
+                while (div.firstElementChild)
+                {
+                    div.firstElementChild.remove();
+                }
+            });
+            
+                
+            let controller = {};
+            
+            viewer.on("controller.set", (event)=>
+            {
+                controller = event;
+            })
+                
+            viewer.on(["import.dblclick", "model.dblclick", "cloud.dblclick"], (event)=>
+            {
+                if (controller.name == "walker")
+                {
+                    if (event.normal.y > 0.8)
+                    {
+                        viewer.post("controller.target", event.xyz);
+                    }
+                }
+                else
+                {
+                    viewer.post("controller.target", event.xyz);
+                }
+            });
+ 
+            viewer.on("viewer.mousemove", (event)=>
+            {
+                if (controller.name == "walker" && event.normal.y < 0.8)
+                {
+                    viewer.post("target", { color: [1.0,0.502,0.0] } );
+                }
+                else
+                {
+                    viewer.post("target", { color: [0.0,0.502,1.00] } );
+                }
+            });
+
+            {{^dataset}}
+            installInventory = function ()
+            {
+                let inventory = document.querySelector("vx-inventory");
+                inventory.addEventListener("dataset-load", async event =>
+                {
+                    viewer.load(await inventory.getToken(event.detail));
+                    document.getElementById("inventory-dialog").hidden = true;
+                });
+                inventory.addEventListener("click", (event) =>
+                {
+                    document.getElementById("inventory-dialog").hidden = false;
+                });
+                document.querySelector("button[name='inventory']").addEventListener("click", (event) =>
+                {
+                    document.getElementById("inventory-dialog").hidden = false;
+                });
+                document.getElementById("inventory-dialog").hidden = false;
+            }
+            {{/dataset}}
+           
+            {{#password}}
+            document.querySelector("ui-password").addEventListener("verified", async event=>
+            {
+                {{#dataset}}
+                await viewer.load(decodeURIComponent("{{{dataset}}}"));
+                {{/dataset}}
+                {{^dataset }}
+                installInventory()
+                {{/dataset}}
+            })
+            {{/password}}
+
+            {{^password}}
+                {{#dataset}}
+                await viewer.load(decodeURIComponent("{{{dataset}}}"));
+                {{/dataset}}
+                {{^dataset}}
+                installInventory()
+                {{/dataset}}
+            {{/password}}
+
+        });
+
+    </script>
+    
+    <style>
+
+        body 
+        { 
+            user-select: none; 
+        }
+        
+        vx-viewer  { 
+            position: absolute; 
+            top: 0px; 
+            left: 0px; 
+            width:100%; 
+            height:100%;
+            border: none; 
+        }  
+        
+        #carousel 
+        {
+            position:absolute; 
+            bottom: 16px; 
+            left: 50%;
+            transform: translateX(-50%)
+        }
+        
+        .dotstyle ul {
+            position: relative;
+            display: inline-block;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            cursor: default;
+        }
+        
+        .dotstyle li {
+            position: relative;
+            display: block;
+            float: left;
+            margin: 0 12px;
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+        
+        .dotstyle li a {
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            outline: none;
+            border-radius: 50%;
+            background-color: #fff;
+            background-color: rgba(0, 0, 255, 0.3);
+            text-indent: -999em;
+            cursor: pointer;
+            position: absolute;
+        }		
+
+        .dotstyle-scaleup li a { transition: transform 0.3s ease, background-color 0.3s ease; }
+        .dotstyle-scaleup li a:hover, .dotstyle-scaleup li a:focus { background-color: blue; }
+        .dotstyle-scaleup li.selected a {
+            background-color: blue;
+            transform: scale(1.5);
+        }
+
+        
+        {{^dataset}}
+        button[name='inventory'] 
+        {
+            position: absolute;
+            top: 0.5em;
+            right: 0.5em;
+        }
+        {{/dataset}}
+        
+     </style>
+       
+        
+</head>
+
+<template>
+    <li><a></a></li>
+</template>
+
+<body>
+    <vx-viewer meta="viewpoints,polygon,line,import,point">
+        {{^dataset}}
+        <button name="inventory" class="vx-primary">
+            <i class="far fa-map"></i>
+            <ui-tooltip hidden>
+                <p style="width: 15em;">Open the Explorer to select a different dataset. This button will not be visible when the App is shared.</p>
+            </ui-tooltip>				
+        </button>
+        {{/dataset}}
+    </vx-viewer>
+     
+    <div id="carousel" class="dotstyle dotstyle-scaleup">
+        <ul>
+            
+        </ul>
+    </div> 
+    
+
+{{#password}}
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <ui-password password="{{{password}}}"></ui-password> 	
+{{/password}}
+    
+{{^dataset}}
+    <ui-modal id="inventory-dialog" hidden close>
+        <vx-inventory key="{{{key}}}" meta="">
+            <div></div>
+        </vx-inventory>
+    </ui-modal>
+{{/dataset}}
+</body>
+
+
+</html>

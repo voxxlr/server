@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+        <link rel="stylesheet" href="${window.app_domain}/ui.css">
+        
+        <style>
+        
+            body { margin: 1em 1em 12em 1em; } 
+            
+            div {
+                margin: 0;
+                padding: 0;
+            }
+            
+            table { 
+                border-collapse:collapse; 
+                table-layout:fixed; 
+                width:80%; 
+                margin: auto;
+                margin-top: 2em;
+            }
+            
+            th { 
+                background:#F5F5F5; 
+                border-top:3px solid var(--primary);
+                font-size: 1.1em;
+            }
+            
+            th > span { 
+                color: var(--primary);
+                font-style: italic; 
+                font-size: 0.8em;
+            }
+            
+            td {  border:1px solid #DDD; }
+            
+            td, th {
+                display:table-cell !important; 
+                padding:1.1em; 
+                empty-cells:show; 
+            } 
+            
+            
+            #sandbox
+            {
+                width: 100%;
+                height: 80em;
+                border: none;
+            }
+                    
+            #messages .viewer { grid-area: viewer; }
+            #messages .overlay { grid-area: overlay; }
+            #messages .threed { grid-area: threed; }
+            #messages .twod { grid-area: twod; }
+            #messages.grid 
+            {
+                display: grid;
+                grid-template-areas:
+                    'viewer overlay overlay overlay overlay overlay'
+                    'viewer threed threed threed twod twod';
+                grid-gap: 10px;
+                background-color: var(--border);
+                padding: 10px;
+            }
+            #messages.grid > div 
+            {
+                background-color: rgb(255, 255, 255);
+                padding: 20px 0;
+            }
+            #messages.grid  h3 { text-align: center; }
+            #messages.grid  li.title
+            {
+                font-style: italic;
+                font-weight: bold;
+                margin-bottom: 1em;
+            }
+            #messages ul
+            {
+                list-style-type:none;
+                font-size: 12px;
+                padding-inline-start: 0px;
+            }
+            
+            #messages .viewer div, #messages .overlay > div, #messages .threed > div, #messages .twod > div
+            {
+                display: flex;
+                justify-content: space-around;
+            }
+            #messages .threed span { font-size: 10px; }
+            
+            
+            .arguments pre {
+              outline: 1px solid #ccc;
+              padding: 5px; margin:
+              5px;
+            }
+            .arguments .string { color: #008000; }
+            .arguments .number { color: #0000ff; }
+            .arguments .boolean { color: #b22222; }
+            .arguments .null { color: #808080; }
+            .arguments .key { color: #000000; }
+            
+            
+            h2:not(:first-child) { margin-top: 2em; }
+            
+        </style>
+        
+        <script>
+        
+        window.addEventListener("load", async (event) => 
+        {
+        });
+        
+        
+        </script>
+        
+    </head>
+            
+    <body>
+    
+        <p id="contruction" style="color:red">This document is under construction</p>
+  
+        <h2>Getting Started<a name="overview"></a></h2>
+  
+        <p>Voxxlr provides a REST API to manage the content in an account and a JavaScript API to communicate with the viewer once it has been loaded into an iframe. 
+        There are two sub domains at <em>app.voxxlr.com</em> and <em>doc.voxxlr.com</em> to access to the hosten apps, accounts and documents. A REST call  
+        always requires either an <em>api key</em> and/or <em>document 
+        token</em>. Note that the tokens and keys only provide limited access and are thus save to share in web clients. The examples in this 
+        document use the <em>api key</em> and <em>document tokens</em> of the Voxxlr sandbox account.</p>
+        <table>
+            <thead><th>app.voxxlr.com</th><th>doc.voxxlr.com</th></thead>
+            <tbody>
+                <tr>
+                    <td>The <em>app</em> domain publishes the REST calls required to obtain <em>tokens</em> for the datasets in an account. It also serves predefined web components and hosted Apps such as the Voxxlr editor.
+                        REST calls to this endpoint require an <em>api key</em>. An API keys is automatically created for each account and can be found on the account screen after logging in.
+                    </td>
+                    <td>The <em>doc</em> domain hosts the Voxxlr viewer which is embedded via an iframe and controlled via the JavaScript API. It also provides a REST API to associate meta data and files with individual documents. 
+                        REST calls to this end point require a <em>document token</em> which is either obtained by issuing calls to the <em>app</em> domain or by opening the token dialog on the <em>document</em> screen.</td>
+                </tr>
+            </tbody>
+        
+        </table>
+        
+        <h3>Embedding the Viewer</h3>
+        
+        <p>The Voxxlr viewer is embedded as an iframe that exchanges messages with its parent window using the HTML channel messaging API. A message consists of a 
+        name and an object containing the required arguments, as well as an optional object containing user-defined data. Voxxlr provides the   
+        <em><a href="https://voxxlr.github.io/app/vx-viewer.js" target="_blank">vx-viewer</a></em> web component which encapsulates the message exchange into an object with a functional interface as shown in the example below. 
+        </p>
+        <iframe width="100%" height="370" src="//jsfiddle.net/voxxlr/Lug7b38c/embedded/" allowfullscreen="allowfullscreen"  frameborder="0"></iframe>
+    
+        
+        <p>Messages should only be sent to the viewer after it has been loaded, which is guaranteed when the <em>viewer.load</em> message handler is invoked. In this example the handler 
+        turns on logging, requests the orbital camera controller and listens to error messages. Note how the <em>vx-viewer</em> is initialized in the HTML document using a URL containing a <em>document token</em>. It can also be initialized  
+         via the <em>vx-viewer.init</em> function</p>
+        
+        <p>The table below list the complete interface of the <em>vx-viewer</em> component. It is important to note the iframe mirrors all messages it receives back to the parent window including all 
+        parameters and user defined data. This mechanism enables synchronous communication and provides a means for implementing an MVC pattern. The Voxxlr editor extensively relies on message mirroring and provides a reference on how 
+        to utilize it.</p>
+        <table id="viewer">
+            <tr>
+                <td>
+                post (name,arguments,custom)
+                </td>
+                <td>
+                posts a single message to the viewer. The function also accepts arrays for each of the arguments in order to pass multiple messages at once.  
+                </td>
+            </tr>
+            <tr>
+                <td>
+                wait (name,arguments,custom)
+                </td>
+                <td>
+                posts a single message to the viewer and returns a promise which resolves when the mirrored message from the viewer is received. This function has to be called
+                with an <em>await</em>.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                on (name,callback,owner)
+                </td>
+                <td>
+                installs an event handler for a message type produced by the viewer. Upon receipt, the vx-viewer will invoke the callback as 
+                <br>
+                <br>
+                    <em>callback(arguments, custom, name, owner)</em>
+                <br>	
+                <br>
+                The	optional <em>owner</em> argument is only required to identify the callback in the <em>un</em> function documented below. If <em>un</em> is never called the
+                <em>owner</em> parameter is not required.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                un (name,owner)
+                </td>
+                <td>
+                Uninstalls all message handlers for the given name and owner 
+                </td>
+            </tr>
+            <tr>
+                <td>
+                import(document||token, config, meta)
+                </td>
+                <td>
+                Loads an additional document into the viewer. Calling this function is equivalent to posting an <em>import.load</em> message with the appropriate arguments. The first parameter to this function can either be a document token or a 
+                complete document object retrieved via the /list or /load REST calls to <em>app.voxxlr.com</em>, respectively. The <em>config</em> parameter is a user defined object which may contain a transformation matrix, and the <em>meta</em> parameter 
+                is an optional array defining which meta data objects to load with the document.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                init(token)
+                </td>
+                <td>
+                Initializes the viewer with a different document. This function is equivalent to changing the source of the iframe. It returns a Promise which resolves when the iframe <em>onload</em> message has been received. This function should be 
+                called with an <em>await</em> 
+                </td>
+            </tr>
+        </table>	 	
+        
+        <h2>API Sandbox<a name="explorer"></a></h2>
+        
+        <p>The API explorer below lets you interactively send and receive messages from the viewer embedded on the right hand side. Simply
+        click on a message to inspect the json object that was sent on the bottom left and the response from the viewer on the bottom right. Note that some actions such as creating a 
+        measurement requires a sequence of messages to be exchanged. As the state of this interaction changes different message types are enabled and the instructions below the viewer 
+        on the right change accordingly. Note that some messages are common to all of the supported data types while others are specific to each type. You can also open the sandbox in a 
+        <a href="https://www.voxxlr.com/sandbox.html" target="_blank">standalone window</a>.<p>  
+        <iframe id="sandbox" src="https://www.voxxlr.com/sandbox.html"></iframe>
+        
+        <h2>Camera Controls<a name="camera"></a></h2>
+        <p>Voxxlr currently supports three different camera controllers, <em>orbiter</em>, <em>flyer</em>  and <em>walker</em> as well as a <em>navigation cube</em> and <em>target indicator</em>. The example below shows how
+        to switch between the <em>orbiter</em> and <em>flyer</em> and how to place the <em>target</em>. Note how two messages are sent in a single invocation of <em>viewer.post</em> </p>
+        <iframe width="100%" height="600" src="//jsfiddle.net/voxxlr/L9jq5xve/embedded/" allowfullscreen="allowfullscreen"  frameborder="0"></iframe>
+  
+        <h2>Viewpoints<a name="viewpoints"></a></h2>
+        <p>A viewpoint stores the entire state of the viewer and currently loaded document, including camera location and mode, hidden measurements and annotations, the visualization mode and so
+        forth. The tabs at the top of the Voxxlr editor are implemented using viewpoints. The example below shows how to record and set a viewpoint as well as taking a screenshot
+        of the viewer</p>
+        <iframe width="100%" height="580" src="//jsfiddle.net/voxxlr/4faz2ukd/embedded/" allowfullscreen="allowfullscreen"  frameborder="0"></iframe>
+                
+        <h2>Measurements<a name="measurements"></a></h2>
+        <p>Voxxlr supports three  geometric primitives, <em>line</em>, <em>polygon</em> and <em>floodfill</em>. Each produces different measurements depending on the current mode. When the viewer receives a <em>.record</em>
+        message such as <em>line.record</em>, it switches into an input mode, requiring the user to define control points inside the model. After enough control points to complete a
+        primitive have been collected, the viewer mirrors the <em>.record</em> message back to the parent window. Note that the actual primitive is not created until the viewer receives a corresponding <em>.create</em> message.</p>
+        
+        <p>A geometric primitive can be selected for editing via the <em>.select</em> message, which is usually a response to a <em>.click</em> or <em>.dblclick</em> message triggered by the viewer when the users attempts
+        to select a primitive. Subsequent changes due to the user moving control points in the viewer are communicated back to the editor via the <em>.update</em> message. The Voxxlr editor, for example, saves all measurements as meta 
+        data objects to the document using the REST API of doc.voxxlr.com. When a document is loaded, the editor retrieves the meta data and creates the measurements via the <em>.create</em> messages.</p>.
+        
+        <iframe width="100%" height="600" src="//jsfiddle.net/voxxlr/5qxhdjvc/embedded/" allowfullscreen="allowfullscreen"  frameborder="0"></iframe>
+
+        <h2>Annotations<a name="annotations"></a></h2>
+        
+        <p>An annotation is based on a <em>point</em> geometric primitive. Unlike the measurement primitives which are rendered by the viewer, a point requires additional JavaScript code to render its
+        appearance onto the 2D overlay using the HTML canvas API. The <em>point.create</em> message must thus contain a <em>code</em> object that implements the required functions as well as an optional 
+        <em>scope</em> object, to which the functions are bound during execution. A reference to <em>this</em> within the supplied functions hence refers to the supplied <em>scope</em> object and its members</p>
+        
+        <table id="point">
+        
+            <tr>
+                <td>
+                init ()
+                </td>
+                <td>
+                The init functions is called once when the point primitive is created. In the example below this function loads an image.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                render2d(ctx, state)
+                </td>
+                <td>
+                This function is called whenever the viewer has to render the point primitive. <em>ctx</em> is a handle to the current 2d canvas context and <em>state</em> contains viewer specific information about 
+                the primitive such as the current scale and timestamp. Note that the render function function must return a boolean to indicate whether the object is fully rendered. To implement an animation, 
+                <em>true</em> has to be returned in order to trigger a subsequent repaint.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                render3d(...) - coming soon
+                </td>
+                <td>
+                The render3d function will provide an interface to draw the point geometry in the 3D canvas using WebGL.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                update(scope)
+                </td>
+                <td>
+                This function is optional and called every time the primitive receives a <em>point.update</em> message. The scope parameter passed to <em>update</em> is part of the message content. This function is generally used
+                to update the <em>scope</em> to which the functions in the <em>code</em> object are bound. In the example below it is used to change the radius of the icon.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                intersect(ctx, x, y, state)
+                </td>
+                <td>
+                This function is optional and called to determine if the point primitive intersects the <em>x,y</em> coordinates on the screen. This function is generally called to determine if a mouse click occurred on the
+                primitive. <em>ctx</em> is passed to enable HTML canvas based collision detection mechanism. 
+                </td>
+            </tr>
+        
+        </table>
+        
+        <p>The functions provided to the <em>point</em> primitive determine how it looks and behaves, but it is the parent application that defines what a primitive represents and what occurs when it is selected. The Voxxlr editor, 
+        for example, provides three different types of annotations based on the point primitives. The examples below shows how to create an annotation consisting of an SVG icon surrounded by an animated circle. The "Larger" and "Smaller" buttons trigger
+        a <em>point.update</em> message which in turn triggers the update function of the primitive to increase the radius stored in the <em>this</em> scope</p>
+        
+        <iframe width="100%" height="900" src="//jsfiddle.net/voxxlr/wLycum8r/embedded/" allowfullscreen="allowfullscreen"  frameborder="0"></iframe>
+            
+        
+        <h2>Importing Documents<a name="import"></a></h2>
+        <p>Voxxlr provides mechanisms to import other documents on the platform. This general only applies to similar data types such as Point Clouds and 3D Models and the corresponding messages may have no effect for incompatible data types. Importing a document requires either
+        a document token or a complete document object. The <em>vx-viewer</em> provides an import function that accepts either as a parameter. Internally it post <em>import.load</em> message</p>
+        <iframe width="100%" height="725" src="//jsfiddle.net/voxxlr/ox70bjvr/embedded/" allowfullscreen="allowfullscreen"  frameborder="0"></iframe>    	
+        
+        <!-- 
+        <h2>Activation Distances<a name="activation"></a></h2>
+        <p></p>
+    
+        <h2>Custom Parameters<a name="custom"></a></h2>
+        <p></p>
+         -->
+           
+        <h2>Pre-built Components<a name="components"></a></h2>
+        <p>
+ 
+        The <em><a href="https://app.voxxlr.com/vx-viewer.js" target="_blank">vx-viewer</a></em> as well as other components encapsulating various 
+        high level concepts can be found at the app.voxxlr.com domain as well as on github. The example below, for example, uses the <em>hierarchy</em> component to display the structure of the
+        3D model and the <em>tabs</em> component to manage viewpoints. 
+        </p>
+        <iframe width="100%" height="440" src="//jsfiddle.net/voxxlr/wd0p5k6a/embedded/html,css,js,result" allowfullscreen="allowfullscreen"  frameborder="0"></iframe>
+        <p>Note that the Voxxlr editor itself is an App, and can thus be used as a reference implementation. The complete source code of the editor as well as a number 
+        of predefined web components can be found on github. If you have questions or need support in developing Apps please contact info@voxxlr.com</p> 
+    </body>			
+            
+        <!-- 
+        <section class="main">
+            <div>
+                <div class="grid-item text">
+                    <h2>Develop custom solutions</h2>
+                    <p>Voxxlr provides a programming interface and App infrastructure to develop custom solutions on top of the platform. 
+                    It allows third parties to customize the viewer, automate processes and integrate the platform with existing workflows and tools.</p>
+                    <h2>Sample Apps</h2>
+                    <p>There are a growing number of open source Apps that illustrate how to use the JavaScript and REST API to develop applications on top of the viewer. 
+                    The code of the Voxxlr editor, for example, is also open source and will soon be available through github including a library of web components that facilities the development of new Apps.</p>
+                    <div class="center">
+                        <a style="text-align: center;">
+                            <img width="50" src="https://voxxlr.github.io/app/voxxlr/sandbox/images/github.webp"><br>
+                            <span>Component Library<br> (coming soon...)</span>
+                        </a>
+                    </div>
+                    
+                    <h2>Developer resources</h2>
+                    <p>The JavaScript and REST API are in the process of being documented and fully tested. There is an interactive sandbox to explore the 
+                    messaging API of the viewer as well as several programming examples on jsfiddle. Contact us if you have any question or if you are 
+                    looking for an extension of the API</p>
+                    <div class="center">
+                        <a href="https://www.voxxlr.com/api.html" target=�_blank� style="text-align: center;">
+                            <img width="50" src="https://voxxlr.github.io/app/voxxlr/sandbox/images/javascript.webp"><br>
+                            <span>Programming API</span>
+                        </a>
+                    </div>
+                </div>
+                    
+            </div>
+            <div>
+                <div class="grid-item image"><img src="/images/7.jpg"/></div>
+                <div class="grid-item image"><img src="/images/2.jpg"></div>
+            </div>	
+        </section>			
+        
+    
+        <p>Messages related to importing content and initialization may require <em>document tokens</em> as arguments, which can be obtained from the app.voxxlr.com REST endpoints, 
+        or by accessing a datasets via the Voxxlr editor and then clicking on the REST API button in the inventory panel on the bottom of the screen.</p>
+        <table id="viewer">
+            <tr>
+                <td>
+                post (name,arguments,custom)
+                </td>
+                <td>
+                posts a single message to the viewer. The function also accepts arrays for each of the arguments in order to pass multiple messages at once.  
+                </td>
+            </tr>
+            <tr>
+                <td>
+                wait (name,arguments,custom)
+                </td>
+                <td>
+                posts a single message to the viewer and returns a promise which resolves when the mirrored message from the viewer is received. This function has to be called
+                with an <em>await</em>.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                on (name,callback,owner)
+                </td>
+                <td>
+                installs an event handler for a message type produced by the viewer. On receipt, the viewer will invoke the callback as 
+                <br>
+                <br>
+                    callback(arguments, custom, name, owner)
+                <br>	
+                <br>
+                The	optional <em>owner</em> argument is only required to identify the callback in the <em>un</em> function documented below. If <em>un</em> is never called the
+                <em>owner</em> parameter is not required.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                un (name,owner)
+                </td>
+                <td>
+                Uninstalls all message handlers for the given name and owner 
+                </td>
+            </tr>
+            <tr>
+                <td>
+                import(document||token, config, meta)
+                </td>
+                <td>
+                Loads an additional document into the viewer. Calling this function equivalent to posting an <em>import.load</em> message with the appropriate arguments. The first parameter to this function can either be a document token or a 
+                complete document object retrieved via the /list or /load REST calls to app.voxxlr.com, respectively. The <em>config</em> parameter is a user defined object containing transformation matrix, and the <em>meta</em> parameter 
+                is an optional array defining which meta data objects to load with the document.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                init(token)
+                </td>
+                <td>
+                Initializes the viewer with a different document. This function is equivalent to changing the source of the iframe. It returns a Promise which resolves when the iframe <em>onload</em> message has been received. This function should be 
+                called with an <em>await</em> 
+                </td>
+            </tr>
+        </table>		
+        -->
+            <!-- 
+            
+
+    <!-- 
+    <main id="api-page" hidden>
+        <nav>
+            <div class="section">
+                <img src="https://voxxlr.github.io/app/voxxlr/sandbox/images/javascript.webp">
+                <span>JavaScript</span>
+            </div>
+            <div class="item selected" data-href="https://www.voxxlr.com/api.html#viewer"><span>Getting Started</span></div>
+            <div class="item" data-href="https://www.voxxlr.com/api.html#explorer"><span>API Sandbox</span></div>
+            <div class="item" data-href="https://www.voxxlr.com/api.html#camera"><span>Camera Controls</span></div>
+            <div class="item" data-href="https://www.voxxlr.com/api.html#viewpoints"><span>Viewpoints</span></div>
+            <div class="item" data-href="https://www.voxxlr.com/api.html#measurements"><span>Measurements</span></div>
+            <div class="item" data-href="https://www.voxxlr.com/api.html#annotations"><span>Annotations</span></div>
+            <div class="item" data-href="https://www.voxxlr.com/api.html#import"><span>Importing Documents</span></div>
+            <div class="item" data-href="https://www.voxxlr.com/api.html#components"><span>Pre-built Components</span></div>
+            <div class="section">
+                <img src="https://voxxlr.github.io/app/voxxlr/sandbox/images/swagger.webp">
+                <span>REST</span>
+            </div>
+            <div id="doc" class="item" data-href="https://doc.voxxlr.com/rest.html?token={{{document}}}"><span>doc.voxxlr.com</span></div>
+            <div class="item" data-href="https://app.voxxlr.com/rest.html?key={{{key}}}"><span>app.voxxlr.com</span></div>
+        </nav>
+        <iframe src="https://www.voxxlr.com/api.html"></iframe>  
+    </main>
+    -->			
+            
+             -->
+</html>

@@ -1,0 +1,134 @@
+{
+	"categories": {
+		"management": {
+			"title": "Data Management"
+		},
+		"presentation": {
+			"title": "Presentation"
+		},
+		"productivity": {
+			"title": "Productivity"
+		},
+		"labs": {
+			"title": "Labs"
+		}
+	},
+
+  "apps": {
+    "voxxlr/upload": {
+      "category": "management",
+      "title": "Upload",
+      "icon": "fa-upload",
+      "document": false,
+      "tags": true,
+      "data": { "tags": [] },
+      "tooltip": "<p>Upload point clouds, CAD models, drone maps and more</p><p><i class='fas fa-2x fa-lightbulb'></i><span>Start here...</span></p>"
+    },
+    "voxxlr/inventory": {
+      "category": "management",
+      "title": "Inventory",
+      "icon": "fa-database",
+      "document": false,
+      "tags": true,
+      "data": { "tags": [] },
+      "tooltip": "<p>Manage the data sets in your account. Add descriptions, record preview images and specify geographic location</p>"
+    },
+    "voxxlr/editor": {
+      "category": "presentation",
+      "title": "Editor",
+      "icon": "fa-edit",
+      "document": true,
+      "tags": true,
+      "data": { "tags": [] },
+      "tooltip": "<p>A general editor to take measurements, annotate the data and create presentations</p>"
+    },
+    "voxxlr/viewer": {
+      "category": "presentation",
+      "title": "Viewer",
+      "icon": "fa-eye",
+      "document": true,
+      "tags": false,
+      "data": { "tags": [] },
+      "tooltip": "<p>An easy to use viewer to share presentation created with the editor</p>"
+    },
+    "voxxlr/embed": {
+      "category": "presentation",
+      "title": "Embed",
+      "icon": "fa-code",
+      "document": true,
+      "tags": false,
+      "data": { "tags": [] },
+      "tooltip": "<p>An minimal viewer best suited to embed data sets in existing web pages</p>"
+    },
+    "voxxlr/volumetric": {
+      "category": "productivity",
+      "name": "voxxlr/volumetric",
+      "title": "Volumetric",
+      "icon": "fa-layer-group",
+      "document": true,
+      "tags": true,
+      "data": {
+        "tags": [],
+        "type": "map"
+      },
+      "tooltip": "<p>Measure volumes and elevation profiles in digital elevation models. This App only applies to 2D elevation models</p>"
+    },
+    "voxxlr/bim": {
+      "category": "productivity",
+      "title": "BIM Viewer",
+      "icon": "fa-building",
+      "document": true,
+      "tags": true,
+      "data": {
+        "tags": [],
+        "type": "model"
+      },
+      "tooltip": "<p>A viewer to explore and dissect a 3D CAD model</p>"
+    },
+    "voxxlr/inspect": {
+      "category": "productivity",
+      "title": "Inspector",
+      "icon": "fa-clipboard",
+      "document": true,
+      "tags": true,
+      "data": {
+        "type": "cloud",
+        "tags": [ "_pix4d" ]
+      },
+      "tooltip": "<p>An inspection App for data collected using a drone and processed using Pix4d. This App only contains a sample dataset. Please contact us if youwant to upload your own data for this App</p>"
+    },
+    "voxxlr/rest": {
+      "category": "labs",
+      "title": "Rest API",
+      "icon": "fa-file-code",
+      "document": true,
+      "tags": true,
+      "data": {
+        "tags": []
+      },
+      "tooltip": "<p>Expore the doc, app and www REST APIs</p>"
+    },
+    "voxxlr/sandbox": {
+      "category": "labs",
+      "title": "Viewer API",
+      "icon": "fa-code",
+      "document": true,
+      "tags": true,
+      "data": {
+        "tags": []
+      },
+      "tooltip": "<p>Expore Voxxlr viewer messaging API</p>"
+    },
+    "voxxlr/ui": {
+      "category": "labs",
+      "title": "Web Components",
+      "icon": "fa-cog",
+      "document": true,
+      "tags": true,
+      "data": {
+        "tags": []
+      },
+      "tooltip": "<p>Expore Voxxlr Web Component API</p>"
+    }
+  }
+}

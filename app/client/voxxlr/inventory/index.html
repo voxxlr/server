@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>Inventory</title>
+   <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+        
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+     
+    <!-- ui only component -->
+    <script src="{{{app_domain}}}/ui.js"></script>
+    <script src="{{{app_domain}}}/vx-viewer.js"></script>
+    <script src="{{{app_domain}}}/vx-file.js"></script>
+     
+    <script src="{{{app_domain}}}/voxxlr/inventory/va-documents.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/inventory/va-map.js"></script>
+ 
+    <style>
+    
+        body 
+        { 
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            user-select: none;
+            margin: 1em;
+            padding: 0;
+            display: flex;
+         }
+        
+        #documents 
+        {
+            width: 30em;
+        }
+
+        ui-tab-list { flex-grow: 2; }
+        
+        va-map { flex: 1; overflow: hidden; }
+
+        vx-viewer > div {
+            position: absolute;
+            bottom: 0.5em;
+            right: 0.5em;
+            z-index: 999
+        }
+
+    </style>  
+     
+    <script>
+      
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        window.addEventListener("load", async function(event) 
+        {
+            let map = document.querySelector("va-map");
+            let list = document.querySelector("va-documents");
+            let viewer = document.querySelector("vx-viewer");
+
+            list.addEventListener("select", async (event)=>
+            {
+                map.select(event.detail)
+                map.parentElement.toggleAttribute("disabled", false);
+                window.parent.postMessage({ action: "dataset-load", dataset: event.detail }, "*");
+
+                if (viewer.hasAttribute("active"))
+                {
+                    await viewer.load(event.detail.token);
+                    viewer.post("controller.set", { name: "orbiter" });
+                }
+            });
+        
+            list.addEventListener("unselect", (event)=>
+            {
+                map.unselect(event.detail)
+                map.parentElement.toggleAttribute("disabled", true);
+                viewer.unload()
+            });
+
+            list.addEventListener("load-datasets", (event) =>
+            {
+                map.add(JSON.parse(event.detail))
+            });
+            
+            list.addEventListener("clear-datasets", (event)=>
+            {
+                map.clear();
+                viewer.unload();
+            });
+
+            document.querySelector("ui-tab-list").addEventListener("change", async event =>
+            {
+                if (viewer.hasAttribute("active"))
+                {
+                    if (event.detail)
+                    {
+                        let selected = list.getSelected();
+                        if (selected)
+                        {
+                            if (!viewer.contains(selected.id))
+                            {
+                                await viewer.load(selected.token);
+                                viewer.post("controller.set", { name: "orbiter" });
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    //TODO show on map
+                }
+            });
+
+            map.addEventListener("location-changed", event =>
+            {
+                let selected = list.getSelected();
+
+                selected.location = event.detail;
+                fetch(`${window.doc_domain}/tag`,  
+                { 
+                    method: 'PATCH', 
+                    headers: new Headers({
+                     'x-doc-token': selected.token,
+                     'Content-Type': "application/json",
+                    }),
+                    body: JSON.stringify({ location : selected.location })
+                });
+            });
+
+            viewer.querySelector("button[name='snapshot']").addEventListener("click", async (event) => 
+            {
+                list.setPreview(await viewer.recordPreview());
+            });
+           
+            document.querySelector("vx-file").addEventListener("item-done", event=>
+            {
+                fetch(`${window.doc_domain}/file/preview.jpg`, 
+                {
+                    headers: new Headers({ 'x-doc-token': this.div.content.token }),
+                }).then(async (response) =>
+                {
+                    let file = await response.json()[0];
+                    this.div.content.files["preview.jpg"] = file.url;
+                    this.dispatchEvent(new CustomEvent('update-dataset', { detail: this.div }));
+                });
+            });
+
+            //
+            // Startup
+            //
+
+            let token = decodeURIComponent("{{{dataset}}}");
+            
+            {{#password}}
+            document.querySelector("ui-password").addEventListener("verified", async event=>
+            {
+            })
+            {{/password}}
+            {{^password}}
+            {{/password}}
+        });
+    
+    </script>
+      
+</head>
+
+<body>
+    <ui-section id="documents" label="Documents">
+        <va-documents key="{{{key}}}" permission="{{{permission}}}"></va-documents> 
+    </ui-section>
+    <ui-tab-list>
+        <span slot="header" active>Map</span>
+        <span slot="header">Preview</span>
+        <va-map slot="content" key="{{{key}}}" permission="{{{permission}}}" active></va-map> 
+        <vx-viewer slot="content">
+            <div>
+                <button name="snapshot" class="vx-secondary">Record Preview ...</button>
+                <vx-file ext="jpg" path="" name="preview.jpg"><i class="fas fa-upload"></i></vx-file>
+            </div>
+        </vx-viewer>
+    </ui-tab-list>
+
+{{#password}}
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <ui-password password="{{{password}}}"></ui-password> 	
+{{/password}}
+</body>
+
+
+</html>

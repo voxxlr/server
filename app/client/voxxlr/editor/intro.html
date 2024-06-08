@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    <script src="{{{app_domain}}}/ui.js"></script>
+     
+    <style>
+        
+        body 
+        { 
+            user-select: none; 
+            margin-top: 10%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        main
+        {
+            position: relative;
+            margin-top: 2em;
+            width: 200px;
+            height: 6em;
+        }
+        
+        main p
+        {
+            text-align: center;
+            margin-top: 2em;
+        }
+        
+        ui-toggle[right]  
+        { 
+            left: -7em;
+            top: 2em;
+        }
+        ui-toggle[left]  
+        {
+            right: -7em;
+            top: 2em;
+        }
+        
+        ui-toggle[bottom]  
+        { 
+            top: -4em;
+            left: calc(50% - 2em);
+        }
+                
+         
+     </style>
+</head>
+
+
+<body>
+    
+    <h1>Select datasets below</h1>
+    
+    <main> 
+        <p>use arrows to open tool panels</p>
+
+    
+</body>
+
+</html>

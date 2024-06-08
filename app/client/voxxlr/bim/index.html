@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link rel="canonical" href="{{{www_domain}}}">
+    <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
+    
+    {{#og}}
+    <title>{{title}}</title>
+    <meta property="og:title" content="{{title}}" />
+    <meta property="og:image" content="{{{image}}}" />
+    <meta property="og:image:width" content="{{image:width}}" />
+    <meta property="og:image:height" content="{{image:height}}" />
+    <meta property="og:alt" content="Link to Voxxlr Viewer" />
+    <meta property="og:type" content="video.other" />
+    <meta property="og:description" content="{{description}}" />    
+    <meta property="og:site_name" content="Voxxlr" />
+    <meta property="og:url" content="{{{url}}}" />
+    {{/og}}
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+
+    <!-- Voxxlr UI components -->    
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    <script src="{{{app_domain}}}/ui.js"></script>
+    
+    <!-- Voxxlr App components -->    
+    <script src="{{{app_domain}}}/vx-viewer.js"></script>
+    <script src="{{{app_domain}}}/vx-hierarchy.js"></script>
+    <script src="{{{app_domain}}}/vx-inventory.js"></script>
+    <script src="{{{app_domain}}}/vx-header.js"></script>
+    <script src="{{{app_domain}}}/vx-viewpoint.js"></script>
+         
+    <script>
+    
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        window.addEventListener("load", async function( event ) 
+        {
+            let viewer = document.querySelector("vx-viewer");
+            
+            // 
+            // Header
+            //
+            
+            let header = document.querySelector("vx-header");
+            header.attach(viewer)
+            header.addEventListener("header-inventory", event =>
+            {
+                document.getElementById("inventory-dialog").hidden = false;
+            });
+            
+            header.addEventListener("header-save", async (event) => 
+            {
+                header.startSave();
+
+                let patch = [];
+                await document.querySelector("vx-viewpoint").save(patch);
+
+                fetch(`${window.doc_domain}/meta`, 
+                { 
+                    method: 'PATCH', 
+                    headers: new Headers({
+                     'x-doc-token': viewer.content.token, 
+                     'Content-Type': "application/json",
+                    }),
+                    body: JSON.stringify(patch)
+                }).then(async (response) =>
+                {
+                    header.endSave();
+                });
+            });
+            
+            // 
+            // Inventory
+            //
+
+            let inventory = document.querySelector("vx-inventory");
+            inventory.addEventListener("dataset-load", async event=>
+            {
+                viewer.load(await inventory.getToken(event.detail));
+                document.getElementById("inventory-dialog").hidden = true;
+            });
+            
+            document.querySelector("ui-tag-list").addEventListener("tags-changed", event =>  
+            {
+                inventory.setAttribute("tags", event.detail);
+                inventory.reload();
+            })
+
+            //
+            //
+            //
+            let hierarchy = document.querySelector("vx-hierarchy");
+            
+            viewer.on("viewer.load", async (args)=>
+            {
+                viewer.post(["controller.set", "target", "navcube"], [{ name: "orbiter" }, { mode: "auto", color: [1.0,0.0,0.502], radius: 24 }, { visible: false }]);
+    
+                document.querySelector("ui-toggle[right]").open();
+            })
+            viewer.on("viewer.unload", async (args)=>
+            {
+                viewer.post(["target"], [ { visible: false }]);
+            })
+                
+            let controller = {};
+            
+            viewer.on("controller.set", (event)=>
+            {
+                controller = event;
+            })
+            
+            viewer.on("viewer.mousemove", (event)=>
+            {
+                if (controller.name == "walker" && event.normal.y < 0.8)
+                {
+                    viewer.post("target", { color: [1.0,0.502,0.0] } );
+                }
+                else
+                {
+                    viewer.post("target", { color: [0.0,0.502,1.00] } );
+                }
+            });
+            
+            viewer.on("model.dblclick", (event) =>
+            {
+                if (document.getElementById("select").hasAttribute("active"))
+                {
+                    hierarchy.select(event)
+                }
+                else if (document.getElementById("hide").hasAttribute("active"))
+                {
+                    hierarchy.hide(event)
+                    viewer.post("*.unselect");
+                }
+                else if (document.getElementById("walk").hasAttribute("active"))
+                {
+                    if (event.normal.y > 0.8)
+                    {
+                        viewer.post("controller.target", event.xyz);
+                    }
+                }
+                else if (document.getElementById("orbit").hasAttribute("active"))
+                {
+                    viewer.post("controller.target", event.xyz);
+                }
+            });
+            
+            viewer.on("node.select", async (args) =>
+            {
+                let aabb = await viewer.get("node.aabb",  args );
+                viewer.post("controller.view", aabb);
+            });
+            
+
+            viewer.on(["viewer.dblclick"], (event)=>
+            {
+                if (event.distance === Number.POSITIVE_INFINITY)
+                {
+                    viewer.post("*.unselect");
+                }
+            });
+            
+            viewer.on("controller.set", (args)=>
+            {
+                if (args.name === "orbiter")
+                {
+                    document.getElementById("camera").select(document.getElementById("orbit"));
+                    document.getElementById("actions").toggleAttribute("disabled", false);
+                }
+                else
+                {
+                    document.getElementById("camera").select(document.getElementById("walk"));
+                    document.getElementById("actions").toggleAttribute("disabled", true);
+                    
+                    document.getElementById("select").toggleAttribute("active", false);
+                    document.getElementById("hide").toggleAttribute("active", false);
+                }
+            });
+            
+            document.getElementById("orbit").addEventListener("click", event=>
+            {
+                viewer.post(["controller.set", "target"], [{ name: "orbiter", orbit: 4 }, { visible: false }]);
+            })
+            
+            document.getElementById("actions").addEventListener("change", event=>
+            {
+                viewer.post("*.unselect");
+            })
+            
+            document.getElementById("reset").addEventListener("click", async event=>
+            {
+                await viewer.post("*.unselect");
+                hierarchy.reset();
+                viewer.post(["controller.set", "target"], [{ name: "orbiter", min: viewer.content.root.min, max: viewer.content.root.max }, { visible: false }]);
+            })
+            //
+            //
+            //
+            
+            let walk = document.getElementById("walk");
+            let dragCover;
+            
+            walk.addEventListener("dragstart", (event) =>
+            {
+                let rect = viewer.getBoundingClientRect();
+                event.dataTransfer.setDragImage(walk, -10,-10);
+                
+                dragCover = document.createElement("div");
+                dragCover.style.position = 'fixed';
+                dragCover.style.left = `${rect.left}px`;
+                dragCover.style.top = `${rect.top}px`;
+                dragCover.style.width = `${rect.width}px`;
+                dragCover.style.height = `${rect.height}px`;
+                dragCover.style.zIndex = 1;
+                dragCover.style.backgroundColor = 'blue';
+                dragCover.style.opacity = 0.1;
+                
+                let dropEffect = "move";
+                let sx = 0;
+                let sy = 0;
+                let timer = null;
+                let cast3d = null;
+                
+                //event.dataTransfer.effectAllowed  = "move";
+                dragCover.addEventListener("dragover", async (event) =>
+                {	
+                    sx = event.pageX - rect.left;
+                    sy = event.pageY - rect.top;
+                    
+                    if (!timer)
+                    {
+                        timer = setTimeout(async () => 
+                        {
+                            cast3d = await viewer.wait("raycast.content", { x:sx, y:sy, normal: {} });
+                            if (cast3d.distance != Number.POSITIVE_INFINITY && cast3d.normal.y > 0.7)
+                            {
+                                dropEffect = "move";
+                            }
+                            else
+                            {
+                                dropEffect = "none";
+                            }
+                            timer = null;
+                        }, 300);
+                    }
+                    event.dataTransfer.dropEffect = dropEffect;
+                    event.preventDefault();
+                    event.stopPropagation();					
+                });
+                
+                dragCover.addEventListener("drop", async (event) => 
+                {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    dragCover.remove();
+                    delete dragCover;
+                    
+                    if (cast3d && cast3d.distance != Number.POSITIVE_INFINITY && cast3d.normal.y > 0.7)
+                    {
+                        viewer.post(["controller.set", "target"], [{ name: "walker", target: cast3d.xyz }, { visible: true }]);
+                    }
+                });
+                
+                viewer.appendChild(dragCover);
+            });
+            
+            walk.addEventListener("dragend", (event) => 
+            { 
+                if (dragCover)
+                {
+                    dragCover.remove();
+                    delete dragCover;
+                } 
+            });
+            
+            //
+            // Startup
+            //
+            
+            {{#password}}
+            document.querySelector("ui-password").addEventListener("verified", async event=>
+            {
+                {{#dataset}}
+                await viewer.load(decodeURIComponent("{{{dataset}}}"));
+                {{/dataset}}
+                {{^dataset}}
+                document.getElementById("inventory-dialog").hidden = false;
+                {{/dataset}}
+            })
+            {{/password}}
+
+            {{^password}}
+            {{#dataset}}
+            await viewer.load(decodeURIComponent("{{{dataset}}}"));
+            {{/dataset}}
+            {{^dataset}}
+            document.getElementById("inventory-dialog").hidden = false;
+            {{/dataset}}
+            {{/password}}
+        });
+        
+    </script>
+    
+    <style>
+
+        body 
+        { 
+            overflow: hidden; 
+            height:100vh; 
+            width: 100vw;
+            user-select: none; 
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main
+        {
+            flex: 2;
+            display: flex;
+            align-items: stretch;
+            overflow: hidden;
+            margin-top: 0.5em;
+        }
+        
+        vx-viewer  
+        { 
+            width:100%; 
+            height:100%;
+            border: none;
+            overflow: hidden; 
+        }  
+             
+        .tools
+        {
+            position: absolute;
+            left: 50%;
+            bottom: 1em;
+            z-index: 99;
+        }
+        
+        .tools > div
+        {
+            display: flex;
+            margin-left: -50%;
+        }
+        
+
+   
+        ui-toggle[right]
+        {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 400px;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            transition: margin 400ms;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--hover);
+        }
+
+        ui-toggle[right][open] { margin-right: 0px; }
+        ui-toggle[right][close] { margin-right: -400px; }
+        ui-toggle[right] { z-index: 99; }
+        
+        ui-tag-list { margin-top: 0.5em }
+        
+        .vx-tool
+        {
+            padding: 0.8em;
+            width: 5em;
+        }
+        
+        #camera { margin-right: 1em; }
+        #actions { margin-right: 1em; }
+
+     </style>
+        
+</head>
+
+<body>
+
+    <vx-header save></vx-header>
+
+    <vx-viewer meta="viewpoints">
+        <vx-viewpoint editable></vx-viewpoint>
+        <ui-toggle right close>
+            <vx-hierarchy viewer="vx-viewer">
+            </vx-hierarchy>
+        </ui-toggle>
+        <div class="tools">
+            <div>
+                <ui-selection-list id="camera" single required>
+                    <button id="walk" class="vx-tool vx-secondary" draggable="true"><i class="fas fa-3x fa-street-view"></i>
+                        <ui-tooltip hidden>
+                            <p>Drag and drop to walk</p>
+                        </ui-tooltip>
+                    </button>
+                    <button id="orbit" class="vx-tool vx-secondary" active><i class="fas fa-3x fa-compass"></i>
+                        <ui-tooltip hidden>
+                            <p>Double click to navigate</p>
+                        </ui-tooltip>
+                    </button>
+                </ui-selection-list>
+                
+                <ui-selection-list id="actions" single>
+                    <button id="select" class="vx-tool vx-secondary"><i class="fas fa-3x fa-mouse-pointer"></i>
+                        <ui-tooltip hidden>
+                            <p>Double-click to select</p>
+                        </ui-tooltip>
+                    </button>
+                    <button id="hide" class="vx-tool vx-secondary"><i class="fas fa-3x fa-eraser"></i>
+                        <ui-tooltip hidden>
+                            <p>Double-click to erase</p>
+                        </ui-tooltip>
+                    </button>
+                </ui-selection-list>
+                
+                <ui-selection-list id="focal" spring>
+                    <button id="reset" class="vx-tool vx-secondary"><i class="fas fa-3x fa-home"></i>
+                        <ui-tooltip hidden>
+                            <p>Reset view</p>
+                        </ui-tooltip>
+                    </button>
+                </ui-selection-list>
+                
+            </div>
+        </div>
+    </vx-viewer>
+    
+    <ui-modal id="inventory-dialog" hidden close>
+        <vx-inventory key="{{{key}}}" type="model" meta="">
+            <ui-tag-list>
+                <ui-tag-input type="text" ></ui-tag-input>
+            </ui-tag-list>
+            <vx-dataset-info></vx-dataset-info>
+        </vx-inventory>
+    </ui-modal>
+
+{{#password}}
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <ui-password password="{{{password}}}"></ui-password> 	
+{{/password}}
+
+</body>
+
+
+</html>

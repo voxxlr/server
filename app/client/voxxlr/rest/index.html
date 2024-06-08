@@ -1,0 +1,121 @@
+<html>
+<head>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/3.44.1/swagger-ui-bundle.js" charset="UTF-8"></script>
+    
+    <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+    
+    <!-- Voxxlr UI components -->    
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    <script src="{{{app_domain}}}/ui.js"></script>
+    <script src="{{{app_domain}}}/vx-inventory.js"></script>
+    <script src="{{{app_domain}}}/vx-viewer.js"></script>
+
+    <script>
+
+            function loadYaml(ui, name, dataset)
+            {
+                fetch(`/voxxlr/rest/${name}.yaml`,
+                { 
+                    method: 'GET', 
+                    headers: new Headers({
+                    'x-api-key': "{{{key}}}",
+                    'x-doc-token': dataset
+                    })
+                }).then(async (response) =>
+                {
+                    if (response.ok)
+                    {
+                        ui.specActions.updateSpec(await response.text());
+                    }
+                });
+            }
+
+            window.addEventListener("load", function(event)
+            {
+                var doc = SwaggerUIBundle(
+                {
+                    dom_id: '#doc',
+                    presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIBundle.SwaggerUIStandalonePreset
+                    ],
+                    requestInterceptor: (req) =>
+                    {
+                        console.log(req)
+                        return req;
+                    }
+                });
+
+                var app = SwaggerUIBundle(
+                {
+                    dom_id: '#app',
+                    presets: [
+                        SwaggerUIBundle.presets.apis,
+                        SwaggerUIBundle.SwaggerUIStandalonePreset
+                    ],
+                    requestInterceptor: (req) =>
+                    {
+                        console.log(req)
+                        return req;
+                    }
+                });
+
+
+                {{^dataset}}
+                document.getElementById("inventory-dialog").hidden = false;
+                document.querySelector("iv-list").addEventListener("dataset-load", event =>
+                {
+                    loadYaml(doc, "doc", event.detail.token);
+                    loadYaml(app, "app", event.detail.token);
+                    document.getElementById("inventory-dialog").hidden = true;
+                });
+                {{/dataset}}
+                {{#dataset}}
+                    let token = decodeURIComponent("{{{dataset}}}");
+                    loadYaml(doc, "doc", token);
+                    loadYaml(app, "app", token);
+                {{/dataset}}
+          
+            });
+
+    </script>
+
+    <style>
+
+        body {
+            position: relative;
+        }
+
+        iv-list { display: block; height: 50%; }
+
+
+    </style>
+
+</head>
+
+<body>
+
+    <ui-tab-list>
+        <ui-option slot="header" active>Doc Server Api</ui-option>
+        <ui-option slot="header">App Server Api</ui-option>
+        <div id="doc" slot="content" active></div>
+        <div id="app" slot="content"></div>
+    </ui-tab-list>
+
+    <ui-modal id="inventory-dialog" hidden close>
+        <p>Double-click to select dataset to be used in REST calls</p>
+        <iv-list key="{{{key}}}"></iv-list>
+    </ui-modal>
+         
+</body>
+
+
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale = 1.0,minimum-scale=1.0,user-scalable = no, width=device-width" />
+    <title>Voxxlr - a cloud platform for GIS and BIM</title>
+
+    <meta name="title" content="Voxxlr - a cloud platform for GIS and BIM" />
+    <meta name="description" content="A cloud platform to deliver GIS and BIM data and applications on the web including Point Clouds, 3D Models and Drone Maps and 360 images." />
+
+    <meta property="og:site_name" content="Voxxlr">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Voxxlr - a cloud platform for GIS and BIM" />
+    <meta property="og:image" content="https://www.voxxlr.com/images/logo128.webp" />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="533" />
+    <meta property="og:description" content="A cloud platform to deliver GIS and BIM data and applications on the web including Point Clouds, 3D Models and Drone Maps and 360 images." />
+    <meta property="og:url" content="https://www.voxxlr.com/index.html" />
+
+    <link rel="canonical" href="https://www.voxxlr.com">
+
+    <meta name="google-site-verification" content="6GYs_yIexOCe65CbFMB8d5_yd2uc6OYzaVoLhM9qHgA" />
+    <meta name="p:domain_verify" content="b74e5f0ef51645428e8654a5527f79f2" />
+
+    <link rel="shortcut icon" href="https://www.voxxlr.com/favicon.ico" />
+
+    <script type="application/ld+json">
+        {
+        "@context": "http://schema.org",
+        "@type": "WebSite",
+        "url": "https://www.voxxlr.com",
+        "name": "Voxxlr",
+        "mainEntityOfPage": { "@type": "3Dmodel" },
+        "creator": {
+            "@context": "http://schema.org",
+            "@type": "Organization",
+            "location": { "@type": "Place", "name": "Ottawa" },
+            "name": "Voxxlr",
+            "sameAs": ["https://twitter.com/voxxlr_",
+                "https://www.linkedin.com/company/voxxlr-",
+                "https://www.youtube.com/channel/UCy59IOT7kMzO4cjO_RYeCuw"
+            ],
+            "url": "https://www.voxxlr.com"
+        },
+        "description": "A cloud platform to deliver GIS and BIM data and applications on the web including Point Clouds, 3D Models and Drone Maps and 360 images."
+        }
+    </script>
+
+    <script type="application/ld+json">
+        {
+            "@context": "http://schema.org",
+            "@type": "Organization",
+            "location": { "@type": "Place", "name": "Ottawa" },
+            "name": "Voxxlr",
+            "sameAs": ["https://twitter.com/voxxlr_",
+                "https://www.linkedin.com/company/voxxlr-",
+                "https://www.youtube.com/channel/UCy59IOT7kMzO4cjO_RYeCuw"]
+        }
+    </script>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+        window.www_domain = "{{{www_domain}}}";
+    </script>
+
+    <script src="{{{app_domain}}}/ui.js"></script>
+    <script src="va-login.js"></script>
+
+    <link rel="stylesheet" href="index.css">
+
+    <style>
+
+        #btn-demo1 { background: url({{{demo1_image}}}) center / cover; height: 14em; }
+        #btn-demo2 { background: url({{{demo2_image}}}) center / cover; height: 14em; }
+        #btn-demo3 { background: url({{{demo3_image}}}) center / cover; height: 14em; }
+        #btn-demo4 { background: url({{{demo4_image}}}) center / cover; height: 14em; }
+
+    </style>
+
+    <script>
+
+        window.addEventListener("load", function(event)
+        {
+            document.addEventListener("contextmenu", (e) => { e.preventDefault(); }, false);
+
+            document.querySelectorAll("#section2 .image-btn").forEach(function(item)
+            {
+                item.addEventListener("click", function(event)
+                {
+                    document.getElementById("viewer").src = item.getAttribute("data-href");
+                    document.getElementById("viewer-dialog").hidden = false;
+                });
+            });
+
+            document.getElementById("viewer-dialog").addEventListener("close", event => { document.getElementById("viewer").src = ""; });
+            document.getElementById("btn-login").addEventListener("click", event => { document.getElementById("login-dialog").hidden = false; });
+
+            document.getElementById("login-dialog").addEventListener("login", async (event) =>
+            {
+                window.location = `{{{www_domain}}}/main.html?account=${encodeURIComponent(event.detail)}`;
+            });
+
+
+            let showTarget = (target) =>
+            {
+                document.querySelector("main:not([hidden])").hidden = true;
+                document.querySelectorAll("#main-page > section").forEach(section => section.hidden = true );
+                switch (target)
+                {
+                case "home":
+                    document.getElementById("main-page").hidden = false;
+                    document.getElementById("section1").hidden = false;
+                    document.getElementById("section2").hidden = false;
+                    document.getElementById("section3").hidden = false;
+                    break;
+                case "types":
+                    document.getElementById("main-page").hidden = false;
+                    document.getElementById("section4").hidden = false;
+                    break;
+                case "tools":
+                    document.getElementById("main-page").hidden = false;
+                    document.getElementById("section5").hidden = false;
+                    break;
+                case "api":
+                    document.getElementById("api-page").hidden = false;
+                    break;
+                }
+
+                window.scrollTo(0, 0);
+            }
+
+            document.querySelectorAll("a.more").forEach(more => more.addEventListener("click", event =>
+            {
+                showTarget(event.currentTarget.getAttribute("target"));
+            }));
+
+            document.querySelector(".logo").addEventListener("click", event =>
+            {
+                showTarget("home");
+            });
+
+            document.querySelectorAll("#api-page nav div.item").forEach(button => button.addEventListener("click", event =>
+            {
+                document.querySelector("#api-page nav div.selected").classList.toggle("selected", false);
+                document.querySelector("#api-page iframe").src = event.currentTarget.getAttribute("data-href");
+                event.currentTarget.classList.toggle("selected", true);
+            }));
+        });
+
+    </script>
+
+</head>
+<body>
+
+    <header>
+        <div class="logo"><img alt="Voxxlr.com" src="{{{www_domain}}}/images/logo.svg" /><span>Voxxlr</span></div>
+        <div id="btn-login">Login</div>
+        <!-- <a href="javascript:;" class="button request">Request a Demo</a> -->
+    </header>
+
+    <main id="main-page">
+        <section id="section1">
+            <div>
+                <h1>A Cloud Platform for Geospatial Content</h1>
+                <p>Voxxlr provides web based visualization and analysis tools for geospatial data. Simply upload your data and choose from a growing number of Apps.</p>
+                <div class="sample"><a href="{{{app_domain}}}/1717680009519" target="_blank" class="button">Explore Sample Data...</a></div>
+            </div>
+            <div>
+            </div>
+        </section>
+        <section id="section3">
+            <div>
+                <div class="grid-item text">
+                    <h2>One Platform For Multiple Data Types</h2>
+                    <p>
+                        Upload laser scans, drone maps, 360 images, CAD models and drawings. Voxxlr processes your data within minutes
+                        to become accessible via a standard browser. There is no need for dedicated hardware or software. All data and tools
+                        are easily accessible online. <a class="more" target="types">More...</a>
+                    </p>
+                    <ul>
+                        <li>Point Clouds</li>
+                        <li>Triangle Meshes</li>
+                        <li>Digital Elevation Models</li>
+                        <li>Panoramic Images</li>
+                    </ul>
+                </div>
+                <div class="grid-item text">
+                    <h2>The Right App For The Task</h2>
+                    <p>
+                        Take measurements, create annotations, compare data sets and incorporate external documents and web services. A growing number of
+                        Apps provide a diverse toolbox to utilize your data.
+                        <a class="more" target="tools">More...</a>
+                    </p>
+                    <ul>
+                        <li>Volume Measurement</li>
+                        <li>Elevation Profiles</li>
+                        <li>Timeline Comparisons</li>
+                        <li>Annotations and Overlays</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <section id="section2">
+            <div class="image-btn card" data-href="{{{demo1_url}}}">
+                <div id="btn-demo1"><i class="fas fa-hand-pointer"><em>&nbsp;click to open</em></i></div>
+                <h4>The Inspector App</h4>
+                <p>Perform inspections of photogrammetry dataset collected by drones.</p>
+            </div>
+            <div class="image-btn card" data-href="{{{demo3_url}}}">
+                <div id="btn-demo3"><i class="fas fa-hand-pointer"><em></em></i></div>
+                <h4>The CAD Viewer App</h4>
+                <p>Explore, dissect and analyze 3D CAD and BIM models</p>
+            </div>
+            <div class="image-btn card" data-href="{{{demo4_url}}}">
+                <div id="btn-demo4"><i class="fas fa-hand-pointer"><em></em></i></div>
+                <h4>The Volumetrics App</h4>
+                <p>Take aggregate measurements, display elevation profiles and compare changes over time</p>
+            </div>
+        </section>
+        <section id="section35">
+            <div>
+                <div class="grid-item text">
+                    <h2>Develop Custom Solutions</h2>
+                    <div>
+                        <p>
+                            A mature programming API and component library lets you seamlessly integrate Voxxlr
+                            with existing IT infrastructure and develop custom solutions. Let us know if there is an App you need.
+                            <a class="more" target="api">More...</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="grid-item text" style="display:flex; justify-content: center; align-items:center;">
+                    <!--
+                    <div>
+                        <a href="javascript:;" class="button request">Contact ..</a>
+                    </div>
+                     -->
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="section">
+                <img alt="Voxxlr.com" src="{{{www_domain}}}/images/logo.svg" />
+                <div>
+                    <span class="email">
+                        info@voxxlr.com
+                    </span><br />
+                    <span class="copyright">
+                        &copy; Geist Software Labs. All rights reserved.
+                    </span>
+                </div>
+            </div>
+            <div class="section">
+            </div>
+            <div class="section">
+                <a href="https://www.youtube.com/channel/UCy59IOT7kMzO4cjO_RYeCuw" target="_blank" class="icon icon-youtube-squared"><i class="fab fa-2x fa-youtube-square"></i></a>
+                <a href="https://twitter.com/voxxlr_" target="_blank" class="icon icon-twitter-bird"><i class="fab fa-2x fa-twitter"></i></a>
+                <a href="https://voxxlr.blogspot.com/" target="_blank" class="icon icon-blogger-rect"><i class="fab fa-2x fa-blogger"></i></a>
+            </div>
+        </footer>
+
+    </main>
+
+    <ui-modal id="login-dialog" hidden close>
+        <va-login oauth2='{{{oauth2}}}'></va-login>
+    </ui-modal>
+    <ui-modal id="viewer-dialog" hidden close>
+        <iframe id="viewer"></iframe>
+    </ui-modal>
+</body>
+
+<link rel="dns-prefetch" href="https://{{{app_domain}}}">
+<link rel="dns-prefetch" href="https://{{{doc_domain}}}">
+
+<link rel="prefetch" href="{{{app_domain}}}/vx-hierarchy.js" as="script"></link>
+<link rel="prefetch" href="{{{app_domain}}}/vx-viewer.js" as="script"></link>
+<link rel="prefetch" href="{{{app_domain}}}/vx-listing.js" as="script"></link>
+<link rel="prefetch" href="{{{app_domain}}}/vx-viewpoint.js" as="script"></link>
+<link rel="prefetch" href="{{{app_domain}}}/vx-file.js" as="script"></link>
+
+<!--
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111164704-1"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'UA-111164704-1');
+</script>
+-->
+</html>
+                
+                

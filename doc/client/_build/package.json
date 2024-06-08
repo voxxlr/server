@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "google-closure-compiler": "^20221102.0.1",
+    "node-html-parser": "^6.1.4",
+    "npx": "^10.2.2"
+  },
+
+  "scripts": {
+    "build": "node build.js"
+  }
+}

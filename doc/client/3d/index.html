@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
+    <meta charset="UTF-8"/>
+    <title>Voxxlr Viewer</title>
+    <link rel="canonical" href="https://www.voxxlr.com/index.html">
+     
+    <script>
+    
+        window.addEventListener("load", () => 
+        {
+            document.addEventListener('contextmenu', event => event.preventDefault());
+            
+            var config = {{#content}}{{{.}}}{{/content}}   {{^content}}null{{/content}};
+            
+            var viewer = new V3.Viewer(config);
+            if (config != null)
+            {
+                if (config.type == "model")
+                {
+                    viewer.load(config.id, new M.Model(config, V.viewerCb));
+                }
+                else if (config.type == "cloud")
+                {
+                    viewer.load(config.id, new M.Cloud(config, V.viewerCb));
+                }
+            }
+       });
+        
+    </script>
+        
+    <style>
+    
+        body { overflow: hidden;  touch-action: none; }
+        canvas { position: absolute; top: 0px; left: 0px; width:100%; height:100% }
+        
+    </style>
+  
+</head>
+<body>
+
+    <canvas id="canvas3D"></canvas>
+    <canvas id="canvas2D" class="events"></canvas> 
+   
+</body>
+ 
+<script src= "/geom/geom.js"></script>
+<script src= "/gl/gl.js"></script>
+<script src= "/gl/shader.js"></script>
+<script src= "/gl/object.js"></script>
+<script src= "/index.js"></script>
+<script src= "/overlay/overlay.js"></script>
+<script src= "/overlay/anchor.js"></script>
+<script src= "/overlay/component.js"></script>
+<script src= "/overlay/geometry.js"></script>
+<script src= "/overlay/elevation.js"></script>
+<script src= "/overlay/line.js"></script>
+<script src= "/overlay/polygon.js"></script>
+<script src= "/overlay/point.js"></script>
+<script src= "/3d/index.js"></script>
+<script src= "/3d/camera.js"></script>
+<script src= "/3d/controls/navcube.js"></script>
+<script src= "/3d/controls/target.js"></script>
+<script src= "/3d/controls/transform.js"></script>
+<script src= "/3d/cloud/cloud.js"></script>
+<script src= "/3d/cloud/shader.js"></script>
+<script src= "/3d/model/model.js"></script>
+<script src= "/3d/model/shader.js"></script>
+<script src= "/3d/overlay/polygon.js"></script>
+<script src= "/3d/overlay/line.js"></script>
+
+
+</html>
+

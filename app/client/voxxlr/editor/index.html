@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link rel="canonical" href="https://www.voxxlr.com">
+    <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
+
+    {{#og}}
+    <title>{{title}}</title>
+    <meta property="og:title" content="{{title}}" />
+    <meta property="og:image" content="{{{image}}}" />
+    <meta property="og:image:width" content="{{image:width}}" />
+    <meta property="og:image:height" content="{{image:height}}" />
+    <meta property="og:alt" content="Link to Voxxlr Viewer" />
+    <meta property="og:type" content="video.other" />
+    <meta property="og:description" content="{{description}}" />    
+    <meta property="og:site_name" content="Voxxlr" />
+    <meta property="og:url" content="{{{url}}}" />
+    {{/og}}
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+        
+        
+    <!-- ui only component -->
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    <script src="{{{app_domain}}}/ui.js"></script>
+    
+    <!-- voxxlr component -->
+    <script src="{{{app_domain}}}/vx-viewer.js"></script>
+    <script src="{{{app_domain}}}/vx-overlay.js"></script>
+    <script src="{{{app_domain}}}/vx-hierarchy.js"></script>
+    <script src="{{{app_domain}}}/vx-inventory.js"></script>
+    <script src="{{{app_domain}}}/vx-listing.js"></script>
+    <script src="{{{app_domain}}}/vx-header.js"></script>
+    <script src="{{{app_domain}}}/vx-viewpoint.js"></script>
+    <script src="{{{app_domain}}}/vx-file.js"></script>
+    
+    <!-- app components -->
+    <script src="{{{app_domain}}}/voxxlr/editor/va-polygon.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/editor/va-line.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/editor/va-image.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/editor/va-icon.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/editor/va-text.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/editor/va-link.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/editor/va-import.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/editor/va-camera.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/editor/va-filter.js"></script>
+     
+    <script>
+       
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        window.addEventListener("load", async function(event) 
+        {
+            let viewer = document.querySelector("vx-viewer");
+            
+            // 
+            // Header
+            //
+ 
+            let header = document.querySelector("vx-header");
+            header.attach(viewer)
+            header.addEventListener("header-inventory", event =>
+            {
+                document.querySelector("ui-modal").hidden = false;
+            });
+            
+            header.addEventListener("header-save", async (event) => 
+            {
+                header.startSave();
+
+                let patch = [];
+                await document.querySelector("vx-overlay").save(patch);
+                await document.querySelector("vx-viewpoint").save(patch);
+
+                fetch(`${window.doc_domain}/meta`, 
+                { 
+                    method: 'PATCH', 
+                    headers: new Headers({
+                     'x-doc-token': viewer.content.token, 
+                     'Content-Type': "application/json",
+                    }),
+                    body: JSON.stringify(patch)
+                }).then(async (response) =>
+                {
+                    header.endSave();
+                });
+            });
+            
+            // 
+            // Inventory
+            //
+
+            let inventory = document.querySelector("vx-inventory");
+            inventory.addEventListener("dataset-load", async event=>
+            {
+                viewer.load(await inventory.getToken(event.detail));
+                document.querySelector("ui-modal").hidden = true;
+            });
+            
+            //
+            //
+            //
+            document.querySelector("vx-overlay").attach(viewer);
+
+            let imports = document.querySelector("ui-toggle[left] vx-listing");
+            
+            let buttons = document.querySelector("ui-toggle[left] ui-selection-list");
+            buttons.addEventListener("down", async (event) =>
+            {
+                let config = { id: new Date().getTime() }
+                switch (event.detail.id)
+                {
+                    case "line": 
+                        config.mode = { "distance" : true };
+                        viewer.post("line.record", config, { name: "line" });
+                        break;
+                    case "polygon":
+                        config.mode = { "distance" : true };
+                        viewer.post("polygon.record", config, { name: "polygon" });
+                        break;
+                    case "text":
+                        viewer.post("point.record", config, { name: "text", target: "text" });
+                        break;
+                    case "image":  
+                        viewer.post("point.record", config, { name: "image", target: "image" });
+                        break;
+                    case "link":
+                        viewer.post("point.record", config, { name: "link", target: "link" });
+                        break;
+                    case "import":
+                        document.querySelector("ui-toggle[left] ui-stack").show("div:nth-of-type(2)");
+                        if (imports.empty())
+                        {
+                            await imports.load();
+                        }
+                        break;
+                }				
+            });
+            
+            document.querySelector("ui-toggle[left] ui-stack > div:nth-of-type(2) button").addEventListener("click", event =>
+            {
+                document.querySelector("ui-toggle[left] ui-stack").show("div:nth-of-type(1)");
+                buttons.select(document.getElementById("import"));
+            });
+            
+            document.querySelector("ui-tag-search").addEventListener("changed", event =>
+            {
+                imports.setAttribute("tags", event.detail.join(event.detail, ","))
+                imports.clear();
+                imports.load();
+            });
+            
+            buttons.addEventListener("up", (event) =>
+            {
+                viewer.post(`record.cancel`, {  });
+            });
+            
+            viewer.on("viewer.load", async (args) => 
+            { 
+                buttons.toggleAttribute("disabled", false);
+
+                let right = document.querySelector("ui-toggle[right] ui-stack");
+                switch (args.type)
+                {
+                case "cloud":
+                    document.querySelector("va-camera").hidden = false;
+                    right.show("va-filter");
+                    right.hidden = false;
+                    break;
+                case "model":
+                    document.querySelector("va-camera").hidden = false;
+                    right.show("vx-hierarchy");
+                    right.hidden = false;
+                    break;
+                case "map":
+                    right.show(null);
+                    right.hidden = true;
+                    break;
+                case "panorama":
+                    right.show(null);
+                    right.hidden = true;
+                    break;
+                }
+            });
+            
+            viewer.on("viewer.unload", async (args) => 
+            { 
+                buttons.toggleAttribute("disabled", true);
+                
+                let right = document.querySelector("ui-toggle[right] ui-stack");
+                right.removeAttribute("top");
+                
+                document.querySelector("va-camera").hidden = true;
+                let button = document.getElementById("import");
+                if (button.hasAttribute("active"))
+                {
+                    document.querySelector("ui-toggle[left] ui-stack").show("div:nth-of-type(1)");
+                    button.toggleAttribute("active", false)
+                }
+                imports.clear();
+            })
+            
+        
+            VaLine.init(viewer);
+            VaPolygon.init(viewer);
+            VaText.init(viewer);
+            VaImage.init(viewer);
+            VaLink.init(viewer);
+            VaImport.init(viewer, document.querySelector("vx-listing"));
+                        
+            viewer.on(["line.record", "polygon.record", "point.record"], (geometry, meta) =>
+            {
+                buttons.querySelector("button[active]").toggleAttribute("active", false);
+                viewer.post("*.unselect");
+                viewer.post(`${geometry.type}.select`, { id: geometry.id }, "open");
+            });
+            
+            viewer.on(["viewer.dblclick"], (event)=>
+            {
+                if (event.distance === Number.POSITIVE_INFINITY)
+                {
+                    viewer.post("*.unselect");
+                }
+            });
+                
+            viewer.on(["line.dblclick","polygon.dblclick","floodfill.dblclick","point.dblclick"], (args)=>
+            {
+                document.querySelector("ui-toggle[left] ui-toggle").open();
+            });
+
+            //
+            // Startup
+            //
+
+            let token = decodeURIComponent("{{{dataset}}}");
+            
+            {{#password}}
+            document.querySelector("ui-password").addEventListener("verified", async event=>
+            {
+                if (token)
+                {
+                    await viewer.load(decodeURIComponent("{{{dataset}}}"));
+                }
+                else
+                {
+                    document.querySelector("ui-modal").hidden = false;
+                }
+            })
+            {{/password}}
+            {{^password }}
+            if (token)
+            {
+                await viewer.load(decodeURIComponent("{{{dataset}}}"));
+            }
+            else
+            {
+                document.querySelector("ui-modal").hidden = false;
+            }
+            {{/password}}
+        });
+        
+    
+    </script>
+      
+    <style>
+        
+        body 
+        { 
+            overflow: hidden; 
+            height:100vh; 
+            width: 100vw;
+            user-select: none; 
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main
+        {
+            flex: 2;
+            display: flex;
+            align-items: stretch;
+            overflow: hidden;
+            margin-top: 0.5em;
+        }
+        
+        
+        ui-stack > div 
+        { 
+            height: 100%;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .search { display: flex; }
+        ui-tag-search { flex: 1 }
+
+        ui-toggle
+        {
+            flex-basis:400px;
+            flex-shrink: 0;
+            z-index: 9;
+        }    
+
+        ui-toggle[left]
+        {
+            transition: margin 400ms;
+            display: flex;
+            flex-direction: column;
+            border-right: solid 1px var(--border); 
+        }
+        ui-toggle[left][open] { margin-left: 0px; }
+        ui-toggle[left][close] { margin-left: -400px; }
+
+        ui-toggle[right]
+        {
+            transition: margin 400ms;
+            display: flex;
+            flex-direction: column;
+            border-left: solid 1px var(--border); 
+        }
+        ui-toggle[right][open] { margin-right: 0px; }
+        ui-toggle[right][close] { margin-right: -400px; }
+
+        ui-selection-list button { width: 5em; }
+
+        vx-list 
+        {
+            margin-top: 1em;
+            overflow-y: auto;				
+        }
+
+        vx-hierarchy { width: 400px; }
+        vx-dataset-info { margin-top: auto; }
+            
+     </style>
+</head>
+
+<body>
+     
+    <vx-header save launch></vx-header>
+    <main>
+        <ui-toggle left close>
+            <ui-stack>
+                <div active>
+                    <ui-selection-list single disabled>
+                        <button id="line" class="vx-tool vx-secondary"><i class="fas fa-2x fa-pencil-ruler"></i>
+                            <span>Line</span>
+                        </button>
+                        <button id="polygon" class="vx-tool vx-secondary"><i class="fas fa-2x fa-draw-polygon"></i>
+                            <span>Polygon</span>
+                        </button>
+                        <button id="text" class="vx-tool vx-secondary"><i class="fas fa-2x fa-pen"></i>
+                            <span>Text</span>
+                        </button>
+                        <button id="image" class="vx-tool vx-secondary"><i class="fas fa-2x fa-fill"></i>
+                            <span>Image</span>
+                        </button>
+                        <button id="link" class="vx-tool vx-secondary"><i class="fas fa-2x fa-link"></i>
+                            <span>Link</span>
+                        </button>
+                        <button id="import" class="vx-tool vx-secondary"><i class="fas fa-2x fa-file-import"></i>
+                            <span>Insert</span>
+                        </button>
+                    </ui-selection-list>
+                    <vx-overlay></vx-overlay>
+                </div>
+                <div>
+                    <div class="search">
+                        <ui-tag-search></ui-tag-search>
+                        <button class="vx-secondary"><i class="fas fa-times-circle vx-secondary"></i></button>
+                    </div>
+                    <vx-listing key="{{{key}}}" types="cloud,model" draggable>
+                    </vx-listing>
+                </div>
+            </ui-stack>
+        </ui-toggle>
+        <vx-viewer meta="viewpoints,polygon,line,point,import,name">
+            <div>
+                <vx-viewpoint comments editable></vx-viewpoint><button name="save" class="vx-app vx-secondary" hidden><i class="fas fa-save"></i><span>Save</span></button>
+            </div>
+        </vx-viewer>
+        <ui-toggle right close>
+            <va-camera viewer="vx-viewer" hidden></va-camera>
+            <ui-stack>
+                <vx-hierarchy viewer="vx-viewer"></vx-hierarchy>
+                <va-filter viewer="vx-viewer"></va-filter>
+            </ui-stack>
+        </ui-toggle>
+    </main>	
+    
+    <ui-modal hidden close>
+        <vx-inventory key="{{{key}}}" meta="">
+            <vx-search-filter></vx-search-filter>
+            <vx-dataset-info></vx-dataset-info>
+        </vx-inventory>
+    </ui-modal>
+
+{{#password}}
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <ui-password password="{{{password}}}"></ui-password> 	
+{{/password}}
+    
+</body>
+
+</html>

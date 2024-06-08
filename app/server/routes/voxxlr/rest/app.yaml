@@ -1,0 +1,39 @@
+openapi: 3.0.3
+
+servers:
+    - url: '{{{app_domain}}}'
+
+paths:
+    /link:
+        get:
+            tags: [ACCOUNT_TOKEN]
+            summary: 'List all links for this account'
+            parameters: [{ name: x-account-token, in: header, description: 'account access token', required: true, value: "{{{account}}}" }]
+            responses: { 200: { description: 'List of Links' } }
+        post:
+            tags: [ACCOUNT_TOKEN]
+            summary: 'Create new link'
+            parameters: [{ name: x-account-token, in: header, description: 'account access token', required: true, value: "{{{account}}}" }]
+            requestBody: { description: 'Link to select document/key', required: true, content: { application/json: { schema: { type: object, properties: { 
+                                                                                                                                         app: { type: string },
+                                                                                                                                         key: { type: string },
+                                                                                                                                         name: { type: string } 
+                                                                                                                                         }
+                                                                                                                               },
+                                                                                                                          examples: { A: { value: { app: "voxxlr/editor", key: "{{{key}}}", name: "Test Link" }, summary: '' } } 
+                                                                                                                        } } }
+            responses: { 200: { description: 'New Link object' } }
+    /link/{id}:            
+        put:
+            tags: [ACCOUNT_TOKEN]
+            summary: 'Update Link'
+            parameters: [{ name: x-account-token, in: header, description: 'account access token', required: true, value: "{{{account}}}" },
+                         { name: id, in: path, description: 'link id', format: string, required: true, value: "" }]
+            requestBody: { required: true, content: { application/json: { schema: { type: object } }, text/plain: { schema: { type: string } } } }
+            responses: { 200: { description: 'Updated Link Object' } }
+        delete:
+            tags: [ACCOUNT_TOKEN]
+            summary: 'Delete Link'
+            parameters: [{ name: x-account-token, in: header, description: 'account access token', required: true, value: "{{{account}}}" },
+                         { name: id, in: path, description: 'link id', format: string, required: true, value: "" }]
+            responses: { 200: { description: null } }

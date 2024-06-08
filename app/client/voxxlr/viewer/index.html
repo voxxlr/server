@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+<head>
+
+    <link rel="canonical" href="https://www.voxxlr.com">
+    <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
+    
+    {{#og}}
+    <title>{{title}}</title>
+    <meta property="og:title" content="{{title}}" />
+    <meta property="og:image" content="{{{image}}}" />
+    <meta property="og:image:width" content="{{image:width}}" />
+    <meta property="og:image:height" content="{{image:height}}" />
+    <meta property="og:alt" content="Link to Voxxlr Viewer" />
+    <meta property="og:type" content="video.other" />
+    <meta property="og:description" content="{{description}}" />    
+    <meta property="og:site_name" content="Voxxlr" />
+    <meta property="og:url" content="{{{url}}}" />
+    <meta name="p:domain_verify" content="b74e5f0ef51645428e8654a5527f79f2"/>   
+    {{/og}}
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+ 
+    <script src="{{{app_domain}}}/ui.js"></script>
+    <script src="{{{app_domain}}}/vx-inventory.js"></script>
+    <script src="{{{app_domain}}}/vx-viewer.js"></script>
+
+    <script src="{{{app_domain}}}/voxxlr/viewer/va-images.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/viewer/va-sticky.js"></script>
+
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+
+    <script>
+    
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        window.addEventListener("load", async function( event ) 
+        {
+            let viewer = document.querySelector("vx-viewer");
+            
+            viewer.on("viewpoint", event =>
+            {
+                viewer.post(`*.unselect`, {});
+            })
+ 
+            viewer.on("point.click", async (event)=>
+            {
+                switch (event.meta.target)  
+                {
+                    case "text":
+                        let popup = document.querySelector("va-sticky")
+                        popup.querySelector("div").innerHTML = event.meta.html;
+                        popup.open(event);
+                        break;
+                        
+                    case "link":
+                        let modal = document.getElementById("link-dialog");
+                        let iframe = modal.querySelector("iframe");
+                        if (iframe.src !== event.meta.href)
+                        {
+                            iframe.src = event.meta.href;
+                        }
+                        modal.hidden = false;
+                        break;
+                        
+                    case "image":
+
+                        fetch(`${window.doc_domain}/file/${event.id}/`,
+                        {
+                            method: 'GET',
+                            headers: new Headers({ 'x-doc-token': viewer.getAttribute("token") })
+                        }).then(async (response) =>
+                        {
+                            let list = await response.json();
+                            let modal = document.getElementById("image-dialog");
+
+                            let images = list.map(image => ({
+                                caption: image.path.substring(image.path.lastIndexOf('/') + 1),
+                                url: image.url
+                            }))
+
+                            modal.querySelector("va-images").init(images);
+                            modal.hidden = false;
+                        });
+                        break;
+                    case "panorama":
+                        break;
+                }
+            });
+
+            let controller = {};
+            
+            viewer.on("controller.set", (event)=> 
+            {
+                controller = event;
+            })
+                
+            viewer.on(["import.dblclick", "model.dblclick", "cloud.dblclick", "map.dblclick"], (event)=>
+            {
+                if (controller.name == "walker")
+                {
+                    if (event.normal.y > 0.8)
+                    {
+                        viewer.post("controller.target", event.xyz);
+                    }
+                }
+                else
+                {
+                    viewer.post("controller.target", event.xyz);
+                }
+            });
+    
+            viewer.on("viewer.mousemove", (event)=>
+            {
+                if (controller.name == "walker" && event.normal.y < 0.8)
+                {
+                    viewer.post("target", { color: [1.0,0.502,0.0] } );
+                }
+                else
+                {
+                    viewer.post("target", { color: [0.0,0.502,1.00] } );
+                }
+            });      			
+            
+            viewer.on("viewer.load", async (args, param) => 
+            { 
+                let div = document.getElementById("viewpoints");
+                let template = document.querySelector("template");
+                let viewpoints = args.meta.viewpoints || [];
+                viewpoints.forEach((viewpoint) => 
+                {
+                    let entry = template.content.cloneNode(true);
+                    entry.querySelector("h4").textContent = viewpoint.name;
+                    entry.querySelector("p").textContent = viewpoint.comment;
+                    entry.firstElementChild.addEventListener('click', (event) => 
+                    {
+                        let selected = document.querySelector(".viewpoint.selected");
+                        if (selected)
+                        {
+                            selected.classList.remove("selected");
+                        }
+                        event.currentTarget.querySelector("h4").classList.toggle("visited", true);
+                        event.currentTarget.classList.add("selected");
+                        
+                        let index = Array.prototype.indexOf.call(event.currentTarget.parentNode.children, event.currentTarget);
+                        viewer.post("viewpoint", viewpoints[index]);
+                    });
+                    div.appendChild(entry);
+                });
+                
+                for (var id in args.meta.polygon || {})
+                {
+                    viewer.post("polygon.create", args.meta.polygon[id]);
+                }
+                for (var id in args.meta.line || {})
+                {
+                    viewer.post("line.create", args.meta.line[id]);
+                }
+                for (var id in args.meta.point || {})
+                {
+                    viewer.post("point.create", args.meta.point[id]);
+                }
+                
+                for (var id in args.meta.import || {})
+                {
+                    await fetch(`${window.app_domain}/load/${args.meta.import[id].document}`, 
+                    { 
+                        method: 'POST', 
+                        headers: new Headers({
+                         'x-api-key': '{{{key}}}', 
+                         'Content-Type': "application/json",
+                        }),
+                        body: JSON.stringify({})
+                    }).then(async (response) =>
+                    {
+                        let dataset = await response.json();
+                        await viewer.post("import.create", dataset, args.meta.import[id]);
+                    });
+                }
+            
+    
+                let viewpoint = document.querySelector(".viewpoint:first-child");
+                if (viewpoint)
+                {
+                    viewpoint.dispatchEvent(new CustomEvent("click"));
+                }
+                else
+                {
+                    viewer.post("controller.set", { name: "orbiter" });
+                }
+                
+                document.querySelector("aside > a").dispatchEvent(new CustomEvent("click"));
+            });
+            
+            viewer.on("viewer.unload",  async (args)=>
+            {
+                let div = document.getElementById("viewpoints");
+                while (div.firstElementChild)
+                {
+                    div.firstElementChild.remove();
+                }
+            });
+            
+            document.querySelector("aside > a").addEventListener("click", (event) => 
+            {
+                let aside = event.currentTarget.parentNode;
+                let img = aside.querySelector("img");
+                if (aside.classList.contains("closed"))
+                {
+                    img.src = "{{{app_domain}}}/voxxlr/viewer/images/close.webp";
+                }
+                else
+                {
+                    img.src = "{{{app_domain}}}/voxxlr/viewer/images/open.webp";
+                }
+        
+                aside.classList.toggle("closed");
+            });
+
+            let inventory = document.querySelector("vx-inventory");
+            inventory.addEventListener("dataset-load", async event =>
+            {
+                viewer.load(await inventory.getToken(event.detail));
+                document.getElementById("inventory-dialog").hidden = true;
+            });
+            document.querySelector("button[name='inventory']").addEventListener("click", (event) =>
+            {
+                document.getElementById("inventory-dialog").hidden = false;
+            });
+
+            
+            {{#password}}
+            document.querySelector("ui-password").addEventListener("verified", async event=>
+            {
+                {{#dataset}}
+                await viewer.load(decodeURIComponent("{{{dataset}}}"));
+                {{/dataset}}
+                {{^dataset}}
+                document.getElementById("inventory-dialog").hidden = false;
+                {{/dataset}}
+            })
+            {{/password}}
+
+            {{^password}}
+            {{#dataset}}
+            await viewer.load(decodeURIComponent("{{{dataset}}}"));
+            {{/dataset}}
+            {{^dataset}}
+            document.getElementById("inventory-dialog").hidden = false;
+            {{/dataset}}
+            {{/password}}
+        });
+        
+    </script>
+    
+
+    <style>
+    
+        html, body 
+        { 
+            user-select: none; 
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow:hidden;
+            border: none;
+            margin: 0;
+            font-size: 13px;
+            font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+        }
+        
+        body  { display: flex; }
+        iframe { border: none }
+                
+        aside
+        {
+            position: relative;
+            width: 400px;
+            border-right: solid 1px var(--border); 
+            padding: 30px 30px;
+            background: #222;
+            transition: margin-left .3s linear;
+            z-index: 9;
+        }
+        aside.closed { margin-left: -460px; }
+        aside h2  { color: #fff; }
+        aside h4  { color: rgb(0, 102, 204); margin: 0; font-size: 1.2em; }
+        aside p  { margin: 0; color: #888; }
+        aside .viewpoint
+        {
+            position: relative;
+            margin-top:1em;
+            padding: 1.0em 0.8em 1.0em 0.8em;
+            border: 1px solid white;
+        }
+        aside .viewpoint p { color: #fff; }
+        aside .viewpoint:hover { background: #444; }
+        aside .viewpoint.selected 
+        { 
+            border: 2px solid rgb(0, 102, 204);;
+            background: #444; 
+        }
+        aside hr  { margin-bottom: 50px; }
+        aside .logo 
+        {
+            width: 120px;
+            height: 120px;
+            margin-left: 40px;
+            margin-bottom: 60px;
+            display: block;
+        }
+        aside .powered
+        {
+            position:absolute;
+            font-size: 12px;
+            right: 35px;
+            top: 140px;
+            color: #888;
+        }		
+        
+        aside a.open
+        {
+            position:absolute;
+            right: 0;
+            top: 20px;
+            margin-right: -32px;
+        }
+
+        aside a.home
+        {
+            display:  block;
+        }
+        
+        vx-viewer
+        {
+            position: relative; 
+            flex-grow: 2; 
+            width: 100%;
+            height: 100%;
+        }
+        
+        va-sticky > div
+        {
+            background: #222;
+            color:  white;
+            padding: 1em;
+        }
+        
+        #link-dialog iframe
+        {
+            position: relative;
+            height: 60vh;
+            width: 60vw;
+        }
+        
+        
+         button[name='inventory'] 
+        {
+            position: absolute;
+            top: 0.5em;
+            right: 0.5em;
+        }
+        
+     </style>
+        
+</head>
+
+<template>
+    <div class="viewpoint">
+        <h4>{{{name}}}</h4>
+        <p></p>
+    </div>
+</template>
+
+
+<body>
+
+    <aside class="closed">
+        <a class="open"><img src="{{{app_domain}}}/voxxlr/viewer/images/open.webp"></a>
+        <a href="https://www.voxxlr.com">
+            <div class="powered">powered by www.voxxlr.com</div>
+            <img class="logo" src="{{{app_domain}}}/voxxlr/viewer/images/logo150.webp">
+        </a>
+        <h2>{{{name}}}</h2>
+        <p>{{{description}}}</p>
+        <hr/>
+        <div id="viewpoints">
+        </div>		    	
+    </aside>
+
+    <vx-viewer meta="viewpoints,polygon,line,import,point">
+        <button name="inventory" class="vx-primary">
+            <i class="far fa-map"></i>
+            <ui-tooltip hidden>
+                <p style="width: 15em;">Open the Explorer to select a different dataset. This button will not be visible when the App is shared.</p>
+            </ui-tooltip>				
+        </button>
+    
+        <va-sticky hidden>
+            <div></div>
+        </va-sticky>
+    </vx-viewer>
+
+    <ui-modal id="image-dialog" hidden close>
+        <va-images></va-images>
+    </ui-modal>
+    
+    <ui-modal id="link-dialog" hidden close>
+        <iframe src ="" style=" resize: both;"></iframe>
+    </ui-modal>
+    
+
+{{#password}}
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <ui-password password="{{{password}}}"></ui-password> 	
+{{/password}}
+ 
+
+    <ui-modal id="inventory-dialog" hidden close>
+        <vx-inventory key="{{{key}}}" meta="">
+            <div></div>
+        </vx-inventory>
+    </ui-modal>
+ 
+</body>
+
+
+</html>
+

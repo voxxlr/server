@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale = 1.0,minimum-scale=1.0,user-scalable = no, width=device-width" />
+    <title>Voxxlr - a cloud platform for GIS and BIM</title>
+    <link rel="shortcut icon" href="{{{www_domain}}}/favicon.ico" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+        window.www_domain = "{{{www_domain}}}";
+    </script>
+
+    <script src="{{{app_domain}}}/ui.js"></script>
+    <script src="{{{app_domain}}}/vx-viewer.js"></script>
+    <script src="{{{app_domain}}}/va-links.js"></script>
+    <script src="{{{app_domain}}}/va-menu.js"></script>
+
+    <script src="{{{www_domain}}}/va-login.js"></script>
+
+    <style>
+
+        body {
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
+            margin: 0;
+        }
+
+        header {
+            position: absolute;
+            top: 0px;
+            left: 10px;
+            right: 10px;
+            height: 40px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            border-bottom: solid 1px var(--border);
+        }
+
+        main {
+            position: absolute;
+            top: 40px;
+            left: 0px;
+            right: 0px;
+            bottom: 0px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+        }
+
+            button i {
+                margin-right: 1em;
+            }
+
+        va-menu {
+            z-index: 1000;
+            margin-left: 2em;
+        }
+
+        va-settings {
+            z-index: 999;
+        }
+
+        #title {
+            text-align: left;
+            align-items: center;
+            font-size: 1.0em;
+            color: var(--primary);
+            display: flex;
+            justify-content: center;
+        }
+
+            #title i {
+                cursor: pointer;
+            }
+
+            #title span {
+                margin-left: 1em;
+                font-weight: bold;
+            }
+
+        #status {
+            flex: 1;
+            text-align: center;
+            color: var(--primary);
+            font-style: italic;
+        }
+
+        #links-dialog > div {
+            position: relative;
+            display: flex;
+            height: 80vh;
+            overflow: hidden;
+        }
+
+        va-link-list {
+            height: 100%;
+        }
+    </style>
+
+    <script>
+
+
+        window.addEventListener("load", function(event)
+        {
+            let iframe = document.querySelector("iframe");
+            iframe.src = `{{{app_domain}}}/launchpad.html?account={{{account}}}`;
+
+            //
+            // menu
+            //
+            let login = document.querySelector("va-login");
+            login.addEventListener("logout", async (event) =>
+            {
+                window.location = "{{{www_domain}}}/index.html";
+            })
+            login.init();
+
+            document.querySelector("header button[name='links']").addEventListener("click", async event =>
+            {
+                document.getElementById("links-dialog").hidden = false;
+            });
+
+            //
+            //  list
+            //
+            let linkList = document.querySelector("va-link-list");
+            linkList.addEventListener("select-link", event =>
+            {
+                let link = document.querySelector("va-link");
+                link.parentElement.toggleAttribute("disabled", false);
+                link.setLink(event.detail.id, event.detail.content)
+            });
+            linkList.addEventListener("unselect-link", event =>
+            {
+                let link = document.querySelector("va-link");
+                link.parentElement.toggleAttribute("disabled", true);
+                link.clrLink()
+            });
+
+            document.getElementById("links-dialog").addEventListener("close", event=>
+            {
+                //linkList.unselect();
+            });
+
+
+            let selectedDocument = null;
+
+            let loadApp = (app) =>
+            {
+                document.querySelector("va-link").setAttribute("app", app);
+                document.querySelector("va-link-list").setAttribute("app", app);
+
+                let menu = document.querySelector("va-menu");
+                let manifest = menu.getManifest(app);
+                document.querySelector("header button[name='links']").hidden = false;
+                document.querySelector("#title i").setAttribute("class", `fas ${app.icon}`);
+                document.querySelector("#title span").textContent = app.title;
+
+                let url = `{{{app_domain}}}/${app}/index.html?key=${encodeURIComponent("{{{key}}}")}`;
+                if (manifest.document)
+                {
+                    if (selectedDocument)
+                    {
+                        let compatible = true;
+
+                        if (manifest.data.type)
+                        {
+                            compatible = manifest.data.type == selectedDocument.type;
+                        }
+
+                        for (var i=0; i<manifest.data.tags.length; i++)
+                        {
+                            if (!selectedDocument.tags.includes(manifest.data.tags[i]))
+                            {
+                                compatible = false;
+                                break;
+                            }
+                        }
+
+                        if (compatible)
+                        {
+                            url += `&dataset=${encodeURIComponent(selectedDocument.token)}`
+                        }
+                    }
+                }
+                iframe.src = url;
+            }
+
+            let settings = document.querySelector("va-settings");
+            settings.addEventListener("open-page", event=>
+            {
+                document.querySelector("header button[name='links']").hidden = true;
+                document.querySelector("#title i").setAttribute("class", `${event.detail.icon}`);
+                document.querySelector("#title span").textContent = event.detail.name;
+                iframe.src = event.detail.href;
+            });
+            settings.addEventListener("logout", event => { login.logout(); });
+            settings.addEventListener("delete", async event => {
+
+                await fetch(`${window.www_domain}`,
+                {
+                    method: 'DELETE',
+                    headers: new Headers({
+                        'x-account-token': "{{{account}}}",
+                    })
+                });
+
+                login.logout();
+            });
+
+            let menu = document.querySelector("va-menu");
+            menu.addEventListener("load-app", event=> { loadApp(event.detail) });
+            menu.addEventListener("load-launchpad", event=>
+            {
+                document.querySelector("header button[name='links']").hidden = false;
+                document.querySelector("#title i").setAttribute("class", "fas fa-rocket");
+                document.querySelector("#title span").textContent = "Launchpad";
+                let url = `{{{app_domain}}}/launchpad.html?account={{{account}}}`;
+                /*
+                if (selectedDocument)
+                {
+                    url += `&document=${encodeURIComponent(selectedDocument.token)}`;
+                }
+                */
+                iframe.src = url;
+            });
+
+            // messages coming from launchpad.html.
+            window.addEventListener("message", async (event) =>
+            {
+                //if (event.source === iframe.contentWindow)
+                {
+                    if (event.data.action == "load-app")
+                    {
+                        loadApp(event.data.app)
+                    }
+                    else if (event.data.action == "dataset-load")
+                    {
+                        selectedDocument = event.data.dataset;
+                    }
+                 }
+            });
+        });
+
+    </script>
+
+</head>
+<body>
+    <header>
+        <div id="title"><i class="fas fa-rocket"></i><span id="page">Launchpad</span></div>
+        <div id="status"></div>
+        <div>
+            <button name="links" class="vx-primary"><i class="fas fa-share-alt"></i><span>Share App</span></button>
+        </div>
+        <va-menu left></va-menu> 
+        <va-settings token="{{{account}}}" left></va-settings>
+    </header>     
+    <main>
+        <iframe src=""></iframe>
+    </main>
+    
+    <ui-modal id="login-dialog" hidden close>
+        <va-login></va-login>
+    </ui-modal>
+    
+    <ui-modal id="links-dialog" hidden close>
+        <div>
+            <ui-section name="list" label="Active Links">
+                <va-link-list token="{{{account}}}"  app="voxxlr/inventory"></va-link-list>
+            </ui-section>
+            <ui-section name="link" label="Link Configuration" disabled>
+                <va-link  token="{{{account}}}"></va-link>
+            </ui-section>
+        </div>
+    </ui-modal>
+
+</body>
+

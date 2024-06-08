@@ -1,0 +1,144 @@
+openapi: 3.0.3
+
+servers:
+    - url: '{{{doc_domain}}}'
+
+paths:
+    /list:
+        post:
+            tags: [API_KEY]
+            summary: 'List dataset accessible via the given Api Key'
+            requestBody: { description: 'Query Parameters in Json object', required: true, content: { application/json: { schema: { type: object, properties: { 
+                                                                                                                                        type: { type: string, enum: [cloud, model, panorama, map] }, 
+                                                                                                                                        tags: { type: string }, 
+                                                                                                                                        select: { type: object,  properties: {meta: { type: string }, file: { type: string } } },
+                                                                                                                                        limit: { type: integer }, 
+                                                                                                                                        cursor: { type: string }, 
+                                                                                                                                        offset: { type: integer } } 
+                                                                                                                                   }, 
+                                                                                                                          examples: { A: { value: { type: cloud, tags: [gallery] }, summary: 'All point clouds tagged "gallery"' }, 
+                                                                                                                                      B: { value: { select: { meta: [description], files: [preview.png] }, token: 36000 }, summary: 'Name, preview image and access token' }, 
+                                                                                                                                      C: { value: { limit: 5, cursor: null }, summary: 'Pagination. New cursor will be in response' } } 
+                                                                                                                         } } }
+            responses: { 200: { } }
+            parameters: [{ name: x-api-key, in: header, description: 'api key', required: true, schema: {  }, value: "{{{key}}}" }]
+    /lookup/{id}:
+        post:
+            tags: [API_KEY]
+            summary: 'Lookup a single dataset given an api key and id'
+            parameters: [{ name: id, in: path, description: 'dataset id', required: true, value: "{{{id}}}" }, 
+                         { name: x-api-key, in: header, description: 'api key', required: true, value: "{{{key}}}" }]
+            requestBody: { description: 'Query Parameters in Json object', required: true, content: { application/json: { schema: { type: object, properties: { 
+                                                                                                                                         select: { type: object,  properties: {meta: { type: string }, file: { type: string } } } }
+                                                                                                                                  },
+                                                                                                                          examples: { A: { value: { select: { meta: [description], files: [preview.png] } }, summary: 'Including preview image and description' } } 
+                                                                                                                        } } }
+            responses: { 200: {  } }
+    /token/{id}:
+        get:
+            tags: [API_KEY]
+            summary: 'Get only an access token for a dataset.'
+            parameters: [{ name: id, in: path, description: 'dataset id', required: true, value: "{{{id}}}" }, 
+                         { name: x-api-key, in: header, description: 'api key', required: true, value: "{{{key}}}" }]
+            responses: { 200: {  } }
+    /:
+        get:
+            tags: [DATASET_TOKEN]
+            summary: 'Get dataset content require to load in viewer'
+            parameters: [{ name: x-doc-token, in: header, description: 'dataset token', required: true, value: "{{{dataset}}}" }]
+            responses: { 200: {  } }
+        delete:
+            tags: [DATASET_TOKEN]
+            summary: 'Delete dataset'
+            parameters: [{ name: x-doc-token, in: header, description: 'dataset token', required: true, value: "{{{dataset}}}" }]
+    /tag:
+        patch:
+            tags: [DATASET_TOKEN]
+            summary: 'Update dataset tags and location'
+            parameters: [{ name: x-doc-token, in: header, description: 'dataset token', required: true, value: "{{{dataset}}}" }]
+            requestBody: { description: 'Query Parameters in Json object', required: true, content: { application/json: { schema: { type: object, properties: { 
+                                                                                                                                         location: { type: object,  properties: {lat: { type: string },  lon: { type: string } } },
+                                                                                                                                         tags: { type: string } 
+                                                                                                                                         }
+                                                                                                                                  },
+                                                                                                                          examples: { A: { value: { location: { lat: '1', lon: '1' }, tags: ['a','b'] }, summary: 'Update location and tags' } } 
+                                                                                                                        } } }
+
+            responses: { 200: {  } }
+    /meta/{attribute}:
+        get:
+            tags: [DATASET_TOKEN]
+            summary: 'Get specfic meta data field'
+            parameters: [{ name: x-doc-token, in: header, description: 'dataset token', required: true, value: "{{{dataset}}}" },
+                         { name: attribute, in: path, description: 'Name of field', required: false, allowEmptyValue: true, schema: {  } }]
+            responses: { 200: { description: 'Selected meta data' } }
+    /meta:
+        patch:
+            tags: [DATASET_TOKEN]
+            summary: 'Update meta data object using jsonpatch syntax'
+            parameters: [{ name: x-doc-token, in: header, description: 'dataset token', required: true, value: "{{{dataset}}}" }]
+            requestBody: { required: true, content: { application/json: { schema: { type: object },
+                                                                          examples: { A: { value: [ { op: "replace", path: '/name', value: 'new name' },
+                                                                                                    { op: "add", path: '/addr', value: { street: 'some street'} } ] , summary: 'Change name and add street' } }
+                                                                        } } }
+            responses: { 200: {  } }
+    /file/{path}:
+        get:
+            tags: [DATASET_TOKEN]
+            summary: 'Get download url for path'
+            parameters: [{ name: x-doc-token, in: header, description: 'dataset token', required: true, value: "{{{dataset}}}" },
+                         { name: path, in: path, description: 'local path to file', required: false, allowEmptyValue: true, format: uri }]
+            responses: { 200: {  } }
+        delete:
+            tags: [DATASET_TOKEN]
+            summary: 'Delete file at path'
+            parameters: [{ name: x-doc-token, in: header, description: 'dataset token', required: true, value: "{{{dataset}}}" },
+                         { name: path, in: path, description: 'local path to file', required: true, format: uri }]
+            responses: { 200: {  } }
+        post:
+            tags: [DATASET_TOKEN]
+            summary: 'Get resumable upload url for path'
+            parameters: [{ name: x-doc-token, in: header, description: 'dataset token', required: true, value: "{{{dataset}}}" },
+                         { name: path, in: path, description: 'local path to file', required: false, format: uri }]
+            responses: { 200: { description: 'path to upload url' } } 
+
+    /key/{id}:
+        get:
+            tags: [ACCOUNT_TOKEN]
+            summary: 'Get api key'
+            parameters: [{ name: x-account-token, in: header, description: 'account access token', required: true, value: "{{{account}}}" },
+                         { name: id, in: path, description: 'api key', format: string, required: true, value: "{{{key}}}" }]
+            responses: { 200: {  } }
+        put:
+            tags: [ACCOUNT_TOKEN]
+            summary: 'Update api key'
+            parameters: [{ name: x-account-token, in: header, description: 'account access token', required: true, value: "{{{account}}}" },
+                         { name: id, in: path, description: 'api key', format: string, required: true, value: "{{{key}}}" }]
+            requestBody: { description: 'Update access tags', required: true, content: { application/json: { schema: { type: object, properties: { 
+                                                                                                                                         id: { type: string },
+                                                                                                                                         tags: { type: string } 
+                                                                                                                                         }
+                                                                                                                                  },
+                                                                                                                          examples: { A: { value: { tags: ['a','b'] }, summary: 'update key access tags' } } 
+                                                                                                                        } } }
+            responses: { 200: {  } }
+        delete:
+            tags: [ACCOUNT_TOKEN]
+            summary: 'Delete api key object'
+            parameters: [{ name: x-account-token, in: header, description: 'account access token', required: true, value: "{{{account}}}" },
+                         { name: id, in: path, description: 'api key', format: string, required: true, value: "{{{key}}}" }]
+            responses: { 200: {  } }
+    /key/:
+      post:
+            tags: [ACCOUNT_TOKEN]
+            summary: 'Create new api key'
+            parameters: [{ name: x-account-token, in: header, description: 'account access token', required: true, value: "{{{account}}}" }]
+            requestBody: { description: 'Update access tags', required: true, content: { application/json: { schema: { type: object, properties: { 
+                                                                                                                                         id: { type: string },
+                                                                                                                                         tags: { type: string } 
+                                                                                                                                         }
+                                                                                                                                  },
+                                                                                                                          examples: { A: { value: { tags: ['gallery'] }, summary: 'specific tags only key' },
+                                                                                                                                      B: { value: { id: '123123123123' }, summary: 'single dataset only key' }  } 
+                                                                                                                        } } }
+            responses: { 200: { description: 'Api key id' } }             

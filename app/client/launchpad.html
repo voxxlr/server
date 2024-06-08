@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>Launchpad</title>
+    <link rel="shortcut icon" href="{{{doc_domain}}}/favicon.ico" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="/ui.css">
+
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+
+    <script src="/ui.js"></script>
+     
+    <style>
+    
+        :root 
+        {
+            --management-app: #0075FF;
+            --presentation-app: #ffcc00;
+            --productivity-app: #00cc33;
+            --labs-app: #cc3300;
+            --background: #F8F8FE;
+        }
+         
+        body 
+        { 
+            height: 100%;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            background: var(--background);
+        }
+
+        main 
+        { 
+            display: flex;
+            flex-direction: column;
+            background: #F8F8FE;
+            padding-top: 2em;
+        }
+        
+        .category 
+        { 
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            margin: 1em;
+            padding-bottom: 2em;
+        }
+        .category:last-child { margin-bottom: 20em; }
+        
+        .title 
+        {
+            margin-left: 1.5em;
+            color: var(--border) 
+        }
+        
+        .app 
+        { 
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            width: 15em;
+            height: 8em;
+            margin: 0.5em; 
+            border: 1px outset var(--border);
+            background: white;
+            box-sizing: border-box;
+        }
+        
+        .app i { margin-top: 0.5em; }
+        
+        div.category.management	.app { color: var(--management-app) }
+        div.category.management	.app:hover { border: 2px outset var(--management-app); }
+        main[edit] div.category.management	.app:hover { border: 2px outset var(--primary); }
+        
+        div.category.presentation .app { color: var(--presentation-app) }
+        div.category.presentation .app:hover { border: 2px outset var(--presentation-app); }
+        main[edit] div.category.presentation .app:hover { border: 2px outset var(--primary); }
+        
+        div.category.productivity .app { color: var(--productivity-app) }
+        div.category.productivity .app:hover { border: 2px outset var(--productivity-app); }
+        main[edit] div.category.productivity .app:hover { border: 2px outset var(--primary); }
+        
+        div.category.labs .app { color: var(--labs-app) }
+        div.category.labs .app:hover { border: 2px outset var(--labs-app); }
+        main[edit] div.category.labs .app:hover  { border: 2px outset var(--primary); }		
+    
+        main:not([edit]) .app > ui-checkbox { visibility: hidden }
+        main[edit] .app  { border: 2px outset var(--primary); }
+        main[edit] .app:hover  { border: 2px outset var(--primary); }
+
+          
+    </style>  
+     
+    <script>
+    
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        window.addEventListener("load", (event) =>
+        {
+            document.addEventListener("contextmenu", (e) => { e.preventDefault(); }, false);
+            
+            document.querySelectorAll("main .app").forEach(panel => 
+            {
+                panel.addEventListener("click", event =>
+                {
+                    if (window.parent == window)
+                    {
+                        let params = `key=${encodeURIComponent("{{{key}}}")}`;
+
+                        if ("{{{dataset}}}")
+                        {
+                            params += (params ? '&' : '') + `dataset=${encodeURIComponent("{{{dataset}}}")}`;
+                        }
+
+                        window.location = `${event.currentTarget.getAttribute("data-name")}/index.html?${params}`;
+                    }
+                    else
+                    {
+                        window.parent.postMessage({ action: "load-app", app: event.currentTarget.getAttribute("data-name") }, "*");
+                    }
+                });
+            });
+            
+            let timer = null;
+            document.querySelectorAll(".app").forEach(item => item.addEventListener("mouseenter", event =>
+            {
+                if (timer)
+                {
+                    clearTimeout(timer);				
+                }
+
+                let div = event.currentTarget.querySelector(".description"); 
+                if (div)
+                {
+                    timer = setTimeout(() => 
+                    {
+                        document.querySelectorAll(".description").forEach(item => item.hidden=true);
+                        div.hidden = false;
+                        timer = null;
+                    }, 700);
+                
+                }
+            }));
+            
+            document.querySelectorAll(".app").forEach(item => item.addEventListener("mouseleave", event =>
+            {
+                if (timer)
+                {
+                    clearTimeout(timer);				
+                }
+                
+                let div = event.currentTarget.querySelector(".description"); 
+                if (div)
+                {
+                    div.hidden = true;
+                }
+            }));
+        });
+
+    
+    </script>
+</head>
+
+<body>
+
+    <main>
+       {{#manifest}}
+
+            {{#management}}
+            <div class="title">Data Management</div>
+            <div class="category management">
+                {{#apps}}
+                <div class="app" data-name="{{name}}">
+                    <i class="fas fa-3x {{icon}}"></i>
+                    <p>{{title}}</p>
+                    <ui-tooltip hidden>
+                        {{{tooltip}}}
+                    </ui-tooltip>
+                    <ui-checkbox checked></ui-checkbox>
+                </div>
+                {{/apps}}
+            </div>
+            {{/management}}
+            
+            {{#presentation}}
+            <div class="title">Presentation</div>
+            <div class="category presentation">
+                {{#apps}}
+                <div class="app" data-name="{{name}}">
+                    <i class="fas fa-3x {{icon}}"></i>
+                    <p>{{title}}</p>
+                    <ui-tooltip hidden>
+                        {{{tooltip}}}
+                    </ui-tooltip>				
+                    <ui-checkbox checked></ui-checkbox>
+                </div>
+                {{/apps}}
+            </div>
+            {{/presentation}}
+        
+            {{#productivity}}
+            <div class="title">Productivity</div>
+            <div class="category productivity">
+                {{#apps}}
+                <div class="app" data-name="{{name}}">
+                    <i class="fas fa-3x {{icon}}"></i>
+                    <p>{{title}}</p>
+                    <ui-tooltip hidden>
+                        {{{tooltip}}}
+                    </ui-tooltip>				
+                    <ui-checkbox checked></ui-checkbox>
+                </div>
+                {{/apps}}
+            </div>
+            {{/productivity}}
+            
+            {{#labs}}
+            <div class="title">Labs</div>
+            <div class="category labs">
+                {{#apps}}
+                <div class="app" data-name="{{name}}">
+                    <i class="fas fa-3x {{icon}}"></i>
+                    <p>{{title}}</p>
+                    <ui-tooltip hidden>
+                        {{{tooltip}}}
+                    </ui-tooltip>				
+                    <ui-checkbox checked></ui-checkbox>
+                </div>
+                {{/apps}}
+            </div>
+            {{/labs}}
+            
+        {{/manifest}}
+    </main>
+     
+</body>
+
+</html>
+            

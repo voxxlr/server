@@ -1,0 +1,54 @@
+services:
+     
+  nginx:
+    image: nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "3021:3021"
+      - "3022:3022"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - www
+
+  doc:
+    image: ghcr.io/voxxlr/vx-doc:main
+    container_name: vx-doc
+    build:
+      context: ../../
+      dockerfile: doc/Dockerfile
+    command: inline
+    env_file: ../../.env
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+
+  app:
+    image: ghcr.io/voxxlr/vx-app:main
+    container_name: vx-app
+    build:
+      context: ../../
+      dockerfile: app/Dockerfile
+    env_file: ../../.env
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+    depends_on:
+      - doc
+
+  www:
+    image: ghcr.io/voxxlr/vx-www:main
+    container_name: vx-www
+    build:
+      context: ../../
+      dockerfile: www/Dockerfile
+    env_file: ../../.env
+    deploy:
+      restart_policy:
+        condition: on-failure
+      replicas: 1
+    depends_on:
+      - app

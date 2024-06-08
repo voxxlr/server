@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link rel="canonical" href="https://www.voxxlr.com">
+    <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
+
+    {{#og}}
+    <title>{{title}}</title>
+    <meta property="og:title" content="{{title}}" />
+    <meta property="og:image" content="{{{image}}}" />
+    <meta property="og:image:width" content="{{image:width}}" />
+    <meta property="og:image:height" content="{{image:height}}" />
+    <meta property="og:alt" content="Link to Voxxlr Viewer" />
+    <meta property="og:type" content="video.other" />
+    <meta property="og:description" content="{{description}}" />    
+    <meta property="og:site_name" content="Voxxlr" />
+    <meta property="og:url" content="{{{url}}}" />
+    <meta name="p:domain_verify" content="b74e5f0ef51645428e8654a5527f79f2"/>   
+    {{/og}}
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+
+    <!-- ui only component -->
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css" crossorigin="anonymous">
+    <script src="{{{app_domain}}}/ui.js"></script>
+    
+    <!-- voxxlr component -->
+    <script src="{{{app_domain}}}/vx-viewer.js"></script>
+    <script src="{{{app_domain}}}/vx-inventory.js"></script>
+    <script src="{{{app_domain}}}/vx-header.js"></script>
+    <script src="{{{app_domain}}}/vx-listing.js"></script>
+    <script src="{{{app_domain}}}/vx-overlay.js"></script>
+    <script src="{{{app_domain}}}/vx-viewpoint.js"></script>
+ 
+    <script src="{{{app_domain}}}/voxxlr/volumetric/va-profile.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/volumetric/va-polygon.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/volumetric/va-floodfill.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/volumetric/va-line.js"></script>
+       
+    <style>
+    </style>  
+     
+    <script>
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        window.addEventListener("load", async function(event) 
+        {
+            let viewer = document.querySelector("vx-viewer");
+            let layers = document.querySelector("vx-listing");
+            
+            viewer.on("viewer.load", async (args) =>
+            {
+                layers.setAttribute("exclude", args.id);
+                
+                document.querySelector("ui-tag-search").clear();
+                layers.removeAttribute("tags")
+                layers.clear();
+                await layers.load();
+                
+                list.toggleAttribute("compate", false);
+                list.toggleAttribute("measure", true);
+                mode.toggleAttribute("compate", false);
+                mode.toggleAttribute("measure", true);
+            });
+            
+            VaLine.init(viewer);
+            VaPolygon.init(viewer);
+            VaFloodfill.init(viewer);
+                        
+            viewer.on("viewer.unload", (args) =>
+            {
+                layers.unselect(true)
+                
+                let button = buttons.querySelector("button[selected]");
+                if (button)
+                {
+                    button.toggleAttribute("selected");				
+                }
+            });
+            
+            //
+            //
+            //
+                
+            viewer.on("viewpoint", async (args) =>
+            {
+                if (args.layer)
+                {
+                    if (!layers.get(args.layer))
+                    {
+                        document.querySelector("ui-tag-search").clear();
+                        layers.removeAttribute("tags")
+                        layers.clear();
+                        await layers.load();
+                    }
+                    layers.select(args.layer, true);
+                }
+                else
+                {
+                    layers.select(null, true);
+                }
+            });
+            
+            // 
+            // Header
+            //
+            
+            let header = document.querySelector("vx-header");
+            header.attach(viewer)
+            
+            header.addEventListener("header-inventory", event =>
+            {
+                document.getElementById("inventory-dialog").hidden = false;
+            });
+            
+            header.addEventListener("header-save", async (event) => 
+            {
+                header.startSave();
+
+                let patch = [];
+                await document.querySelector("vx-overlay").save(patch);
+                await document.querySelector("vx-viewpoint").save(patch);
+
+                fetch(`${window.doc_domain}/meta`, 
+                { 
+                    method: 'PATCH', 
+                    headers: new Headers({
+                     'x-doc-token': viewer.content.token, 
+                     'Content-Type': "application/json",
+                    }),
+                    body: JSON.stringify(patch)
+                }).then(async (response) =>
+                {
+                    header.endSave();
+                });
+            });
+            
+            // 
+            // Inventory
+            //
+            
+            let inventory = document.querySelector("vx-inventory");
+            
+            inventory.addEventListener("dataset-load", async event=>
+            {
+                viewer.load(await inventory.getToken(event.detail));
+                document.getElementById("inventory-dialog").hidden = true;
+            });
+            
+            document.querySelector("ui-tag-list").addEventListener("tags-changed", event =>  
+            {
+                inventory.setAttribute("tags", event.detail);
+                inventory.reload();
+            })
+            
+            // 
+            // layers
+            //
+            
+            let mode = document.querySelector(".mode")
+            layers.addEventListener("dataset-change", (event) =>  
+            {
+                viewer.post("*.scan.stop");
+                
+                if (event.detail.to)
+                {
+                    list.toggleAttribute("measure", false);
+                    list.toggleAttribute("compare", true);
+                    mode.toggleAttribute("measure", false);
+                    mode.toggleAttribute("compare", true);
+                    layers.querySelector("ui-checkbox").toggleAttribute("checked", true);
+
+                    fetch(`${window.doc_domain}?${viewer.meta}`, 
+                    { 
+                        method: 'GET', 
+                        headers: new Headers({'x-doc-token':event.detail.to.token})
+                    }).then(async (response) =>
+                    {
+                        let dataset = await response.json();
+
+                        if (event.detail.from)
+                        {
+                            viewer.post(["import.delete", "import.create"], [ event.detail.from, dataset ], [null, { pane: 1 }]);
+                        }
+                        else
+                        {
+                            viewer.post("import.create", dataset, { pane: 1 });
+                        }
+                        
+                        document.querySelector("vx-viewpoint").setItem("layer", dataset.id);
+                    });
+                }
+                else
+                {
+                    list.toggleAttribute("measure", true);
+                    list.toggleAttribute("compare", false);
+                    mode.toggleAttribute("measure", true);
+                    mode.toggleAttribute("compare", false);
+                    viewer.post("import.delete", event.detail.from);
+                    document.querySelector("vx-viewpoint").clrItem("layer");
+                }
+            });
+            layers.querySelector("ui-checkbox").addEventListener("click", event =>
+            {
+                layers.unselect(true);
+            });
+            
+            document.querySelector("ui-tag-search").addEventListener("changed", event =>
+            {
+                layers.setAttribute("tags", event.detail.join(event.detail, ","))
+                layers.clear();
+                layers.load();
+            });
+            
+            // 
+            // Measurements
+            //
+            
+            let buttons = document.querySelector("ui-selection-list")
+            buttons.addEventListener("down", (event) =>
+            {
+                switch (event.detail.id)
+                {
+                    case "line": 
+                        viewer.post("line.record", { id: new Date().getTime(), mode: { "distance" : false } }, { name: "line", new: true });
+                        break;
+                    case "polygon":
+                        viewer.post("polygon.record", { id: new Date().getTime(), mode: { "distance" : false } }, { name: "polygon", new: true });
+                        break;
+                    case "floodfill": 
+                        viewer.post("floodfill.record", { id: new Date().getTime(), mode: { upward: true } }, { name: "floodfill", new: true });
+                        break;
+                }				
+            });
+        
+            buttons.addEventListener("up", (event) =>
+            {
+                viewer.post(`record.cancel`, {  });
+            });
+            
+            let list = document.querySelector("vx-overlay");
+            list.attach(viewer);
+            list.addEventListener("item-focus", async event=>
+            {
+                let aabb = { min: {}, max: {} };
+        
+                switch (event.detail.type)
+                {
+                    case "polygon":
+                    {
+                        aabb.min.x = Number.POSITIVE_INFINITY;
+                        aabb.max.x = Number.NEGATIVE_INFINITY;
+                        aabb.min.y = Number.POSITIVE_INFINITY;
+                        aabb.max.y = Number.NEGATIVE_INFINITY;
+                        let args = await viewer.wait("polygon.get", { id:event.detail.id, filter: "points" });
+                        args.points.forEach(point=>
+                        {
+                            aabb.min.x = Math.min(point.x, aabb.min.x);
+                            aabb.max.x = Math.max(point.x, aabb.max.x);
+                            aabb.min.y = Math.min(point.y, aabb.min.y);
+                            aabb.max.y = Math.max(point.y, aabb.max.y);
+                        })
+                        break;
+                    }					
+                    case "floodfill":
+                    {
+                        let args = await viewer.wait("floodfill.get", { id:event.detail.id, filter: "pL,pH" });
+                        aabb.min.x = args.pL.x;
+                        aabb.max.x = args.pH.x;
+                        aabb.min.y = args.pL.y;
+                        aabb.max.y = args.pH.y;
+                        break;
+                    }					
+                    case "line":
+                    {
+                        let args = await viewer.wait("line.get", { id:event.detail.id, filter: "points" });
+                        aabb.min.x = Math.min(args.points[0].x, args.points[1].x);
+                        aabb.max.x = Math.max(args.points[0].x, args.points[1].x);
+                        aabb.min.y = Math.min(args.points[0].y, args.points[1].y);
+                        aabb.max.y = Math.max(args.points[0].y, args.points[1].y);
+                        break;
+                    }					
+                }
+                
+                if (aabb)
+                {
+                    viewer.post("controller.view", { aabb })
+                }
+            });
+
+            viewer.on(["line.record", "polygon.record", "floodfill.record"], (geometry, meta) =>
+            {
+                document.querySelector("ui-selection-list button[active]").toggleAttribute("active", false);
+                viewer.post("*.unselect");
+                viewer.post(`${geometry.type}.select`, { id: geometry.id }, "open");
+            });
+
+            viewer.on(["line.select","polygon.select"], (args, custom)=>
+            {
+                viewer.post(`${args.type}.update`, { id: args.id, mode : { "distance" : true }}, { preserve: true });
+            });
+            
+            viewer.on(["line.unselect","polygon.unselect"], (args)=>
+            {
+                viewer.post(`${args.type}.update`, { id: args.id, mode : { "distance" : false }}, { preserve: true });
+            });
+                
+             
+            {{#password}}
+            document.querySelector("ui-password").addEventListener("verified", async event=>
+            {
+                {{#dataset}}
+                await viewer.load(decodeURIComponent("{{{dataset}}}"));
+                {{/dataset}}
+                {{^dataset}}
+                document.getElementById("inventory-dialog").hidden = false;
+                {{/dataset}}
+            })
+            {{/password}}
+
+            {{^password}}
+            {{#dataset}}
+            await viewer.load(decodeURIComponent("{{{dataset}}}"));
+            {{/dataset}}
+            {{^dataset}}
+            document.getElementById("inventory-dialog").hidden = false;
+            {{/dataset}}
+            {{/password}}
+        });
+        
+    
+    </script>
+      
+    <style>
+        
+        body 
+        { 
+            overflow: hidden; 
+            height:100vh; 
+            width: 100vw;
+            user-select: none; 
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main
+        {
+            flex: 2;
+            display: flex;
+            align-items: stretch;
+            overflow: hidden;
+            margin-top: 0.5em;
+        }
+        
+        vx-viewer > div  
+        { 
+            display:flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            position: relative;
+        }		
+        
+        ui-toggle[left] 
+        {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: stretch;
+            padding: 0 10px 10px 10px;
+            flex-grow: 0;
+            flex-shrink: 0;
+            flex-basis: 450px;
+            transition: margin 400ms;
+            border-right: solid 1px var(--border); 
+        }
+        ui-toggle[left][open] { margin-left: 0px; }
+        ui-toggle[left][close] { margin-left: -470px; }
+        ui-toggle[left] { z-index: 9; }
+        
+        ui-toggle[left] > div
+        { 
+            margin-left: 0.1em; 
+            margin-top: 0.1em;
+            display: flex; 
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .mode
+        {
+            flex: 1;
+            vertical-align: middle;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .mode[measure] .measure { color: var(--active); }
+        .mode[measure] .compare { display: none; }
+        .mode[compare] .compare { color: var(--important); }
+        .mode[compare] .measure { display: none; }
+                        
+        ui-selection-list button { width: 5em; }
+        
+        vx-list 
+        { 
+            display:block; 
+            margin-top: 1em;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        ui-toggle[right]
+        {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: stretch;
+            padding: 0 10px 10px 10px;
+            flex-grow: 0;
+            flex-shrink: 0;
+            flex-basis: 340px;
+            max-width: 340px;
+            transition: margin 400ms;
+            border-left: solid 1px var(--border); 
+        }
+        ui-toggle[right][open] { margin-right: 0px; }
+        ui-toggle[right][close] { margin-right: -360px; }
+        ui-toggle[right] {  z-index: 9;  }
+    
+        va-profile 
+        {
+            position: absolute;
+            left: 0px;
+            right: 0px;
+            height: 300px;
+            bottom: 0px;
+            transition:all 0.3s ease;
+            background-color: white;
+            border: solid 1px var(--border); 
+        }
+        
+        vx-listing ui-checkbox 
+        {
+            position: absolute;
+            top: 0.2em;
+            right: 0.2em;
+            font-size: 2em;
+            background-color: var(--important);
+        }
+
+        vx-listing { height: 100%; }
+        
+        ui-tag-list { margin-top: 0.5em }
+        
+            
+     </style>
+</head>
+
+<body>
+
+    <vx-header save></vx-header>
+     
+    <main>
+        <ui-toggle left open>
+            <div>
+                <ui-selection-list single>
+                    <button id="line" class="vx-tool vx-secondary"><i class="fas fa-2x fa-pencil-ruler"></i>
+                        <span>line</span>
+                        <ui-tooltip hidden>
+                            <p>Use the <em>line</em> tool to measure<br/>distances and view elevation profiles</p>
+                        </ui-tooltip>
+                    </button>
+                    <button id="polygon" class="vx-tool vx-secondary"><i class="fas fa-2x fa-draw-polygon"></i>
+                        <span>polygon</span>
+                        <ui-tooltip hidden>
+                            <p>Use the <em>polygon</em> tool to measure<br>distances, area and volume</p>
+                        </ui-tooltip>
+                    </button>
+                    <button id="floodfill" class="vx-tool vx-secondary"><i class="fas fa-2x fa-fill"></i>
+                        <span>fill</span>
+                        <ui-tooltip hidden>
+                            <p>Use the <em>floodfill</em> tool to measure<br>area and volume</p>
+                        </ui-tooltip>
+                    </button>
+                </ui-selection-list>
+                <div class="mode" measure>
+                    <span class="measure">Measuring</span>
+                    <span class="compare">Comparing</span>
+                </div>
+            </div>
+            <vx-overlay measure></vx-overlay>
+        </ui-toggle>
+        <vx-viewer meta="viewpoints,polygon,line,floodfill,name">
+            <vx-viewpoint comments editable></vx-viewpoint>
+            <va-profile hidden></va-profile>
+        </vx-viewer>
+        
+        <ui-toggle right close>
+            <div>
+                <ui-tag-search></ui-tag-search>
+            </div>
+            <vx-listing key="{{{key}}}" type="map" disabled>
+                <ui-checkbox checked slot="actions">
+                    <ui-tooltip hidden>
+                        <p>Remove Layer</p>
+                    </ui-tooltip>
+                </ui-checkbox>
+            </vx-listing>
+        </ui-toggle>
+    </main>	
+
+    <ui-modal id="inventory-dialog" hidden close>
+        <vx-inventory key="{{{key}}}" type="map" meta="">
+            <ui-tag-list>
+                <ui-tag-input type="text" ></ui-tag-input>
+            </ui-tag-list>
+            <vx-dataset-info></vx-dataset-info>
+        </vx-inventory>
+    </ui-modal>
+
+{{#password}}
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <ui-password password="{{{password}}}"></ui-password> 	
+{{/password}}
+    
+</body>
+
+</html>

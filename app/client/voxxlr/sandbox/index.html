@@ -1,0 +1,742 @@
+<html lang="en">
+
+<head>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+    
+    <!-- Voxxlr UI components -->    
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    <script src="{{{app_domain}}}/ui.js"></script>
+    <script src="{{{app_domain}}}/vx-inventory.js"></script>
+    <script src="{{{app_domain}}}/vx-viewer.js"></script>
+
+    <style>
+
+        h2 { margin-top: 2em; }
+        iv-list { display: block; height: 50%; }
+
+        body {
+            display: flex;
+            font-size: 0.9em;
+            flex-direction: row;
+            overflow: auto;
+            justify-content: stretch;
+            padding: 1em;
+        }
+
+        main {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding-bottom: 0.5em;
+            margin-left: 1em;
+        }
+
+        #sent, #received {
+            text-align: center;
+            color: var(--primary);
+            height: 1.5em;
+            font-weight: bold;
+        }
+
+        vx-viewer {
+            position: relative;
+            flex: 1;
+        }
+
+        main > ui-panel[name=Viewer] 
+        { 
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main > ui-panel[name=Messages] 
+        { 
+            flex: 1;
+            display: flex;
+        }
+
+
+        main > ui-panel[name=Messages] > div:nth-of-type(1) 
+        { 
+            flex-basis: 30%; 
+            display: flex;
+            flex-direction: column;
+        }
+        main > ui-panel[name=Messages] > div:nth-of-type(2) 
+        { 
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column;
+        }
+        main > ui-panel[name=Messages] textarea {
+            height: 100%;
+            width: 100%;
+            overflow: auto;
+            margin: 0;
+            resize: none;
+            border: none;
+            white-space: nowrap;
+            font-size: 0.9em;
+        }
+
+        main > ui-panel[name=Messages] span {
+            margin-left: 1em;
+            font-style: italic;
+            font-weight: bold;
+        }
+
+        label.sep { margin-top: 1.2em; }
+
+        aside > ui-panel 
+        {
+            display: flex;
+            flex-direction: column;
+        }
+
+        aside > ui-panel p {
+            font-style: italic;
+            font-weight: bold;
+            border-bottom: 1px solid var(--border);
+        }
+
+        aside > ui-panel > div { display: flex; }
+        aside > ui-panel[name=Instructions] { display: flex; position: relative; }
+        aside > ui-panel[name=Instructions] > span {
+            width: 50%;
+            text-align: center;
+            color: var(--important);
+            font-weight: bold;
+        }
+
+        aside .inputs {
+            display: flex;
+            flex-direction: column;
+        }
+
+        aside .receive p {
+            font-style: italic;
+            font-weight: bold;
+        }
+
+        li { line-height: 1.4em; }
+        li.sep { margin-top: 0.5em; }
+        li.disabled { color: var(--border); }
+        li:not(.disabled):hover { background-color: var(--hover); }
+
+        ul {
+            list-style-type: none;
+            padding-inline-start: 0px;
+            margin-right: 2em;
+        }
+
+        .inputs[hidden] { display: none; }
+        div.cloud[hidden], div.map[hidden], div.model[hidden] { display: none; }
+
+        .specific {
+            display: grid;
+            grid-template-areas:
+                'viewer viewer receive';
+            grid-gap: 2px;
+            box-sizing: border-box;
+        }
+    </style>
+
+    <script>
+
+        window.addEventListener("load", async (event) => {
+            let token =
+            {
+                "cloud": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiVyIsInQiOjEsImkiOjE3MDAwODA5NjE5NTAsImIiOjE1MDY2MDgxMTAzNjAsImlhdCI6MTcwMDQyMzg2OH0.Mk01syy2RpgPo4lckNlBdPRLLlytHN7-T4MFV2R94KY",
+                "model": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiVyIsInQiOjQsImkiOjE2NzAwMTE3NDU1OTIsImIiOjE1MDY2MDgxMTAzNjAsImlhdCI6MTcwMDQyNDA5OH0.Ruq-11DzvGwECqYXyQ0amH2JM9iG1lwArPqJ8vdZO-U",
+                "map": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwIjoiVyIsInQiOjIsImkiOjE2Njk5MTc5NTgwMTEsImIiOjE1MDY2MDgxMTAzNjAsImlhdCI6MTcwMDQyNDIwMH0.vUod9pNst4qSQ4UxkQA4ZOR5FRjBJndgkcACf0tV1mo"
+            }
+
+            let pointCode =
+            {
+                render2d: encodeURI(function (ctx, state) {
+                    ctx.globalAlpha = Easing.Sinusoidal.InOut((state.t % 2000) / 2000);
+                    ctx.fillStyle = 'red';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, ctx.globalAlpha * this.radius, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    return true;
+                }.toString()),
+                update: encodeURI(function (scope) {
+                    this.radius = scope.radius;
+                }.toString()),
+            }
+
+
+            let MESSAGES =
+            {
+                "viewer.image.get": { maxWidth: 568, maxHeight: 320, type: "image/jpeg", options: 0.8 },
+                "viewpoint": {},
+                "viewpoint.get": {},
+                "camera.set": {},
+                "camera.get": {},
+                "camera.project": { x: 0, y: 0, z: 0 },
+                "*.selected.get": {},
+                "*.unselect": {},
+                "controller.set": { name: "orbiter" },
+                "target": { visible: true, color: [1, 0, 0] },
+                "navcube": { visible: true },
+                "model.hierarchy.get": {},
+                "model.materials.get": {},
+                "line.record": { id: "line" },
+                "line.get": {},
+                "line.create": { id: "line" },
+                "line.delete": { id: "line" },
+                "line.select": { id: "line" },
+                "line.unselect": { id: "line" },
+                "line.update": { id: "line", mode: { "distance": false } },
+                "line.scan.start": { id: "line", resolution: 1 / 500.0, direction: { x: 0, y: 1, z: 0 } },
+                "line.scan.stop": { id: "line" },
+                "polygon.record": { id: "polygon" },
+                "polygon.get": {},
+                "polygon.create": { id: "polygon" },
+                "polygon.delete": { id: "polygon" },
+                "polygon.select": { id: "polygon" },
+                "polygon.unselect": { id: "polygon" },
+                "polygon.update": { id: "polygon", mode: { "distance": false } },
+                "polygon.scan.start": { id: "polygon", resolution: 1 / 2000.0 },
+                "polygon.scan.stop": { id: "polygon" },
+                "floodfill.record": { id: "floodfill" },
+                "floodfill.get": {},
+                "floodfill.create": { id: "floodfill" },
+                "floodfill.delete": { id: "floodfill" },
+                "floodfill.select": { id: "floodfill" },
+                "floodfill.unselect": { id: "floodfill" },
+                "floodfill.update": { id: "floodfill", mode: { "downward": true } },
+                "floodfill.scan.start": { id: "floodfill" },
+                "floodfill.scan.stop": { id: "floodfill" },
+                "point.record": { id: "point" },
+                "point.get": {},
+                "point.create": { id: "point", code: pointCode, scope: { radius: 30 } },
+                "point.delete": { id: "point" },
+                "point.select": { id: "point" },
+                "point.unselect": { id: "point" },
+                "point.update": { id: "point", scope: { radius: 12 } },
+                "anchor.create": { id: "anchor", x: 0, y: 0, z: 0 },
+                "anchor.delete": { id: "anchor" },
+                "splitter": { splitH: 0.5, splitV: 0.5 },
+            };
+
+            let ENABLE =
+            {
+                "line.record": ["line.create"],
+                "line.create": ["line.delete", "line.select", "line.update", "line.scan.start"],
+                "line.delete": ["line.record"],
+                "line.select": ["line.unselect"],
+                "line.unselect": ["line.select"],
+                "line.scan.start": ["line.scan.stop"],
+                "polygon.record": ["polygon.create"],
+                "polygon.create": ["polygon.delete", "polygon.select", "polygon.update", "polygon.scan.start"],
+                "polygon.delete": ["polygon.record"],
+                "polygon.select": ["polygon.unselect"],
+                "polygon.unselect": ["polygon.select"],
+                "polygon.scan.start": ["polygon.scan.stop"],
+                "floodfill.record": ["floodfill.create"],
+                "floodfill.create": ["floodfill.delete", "floodfill.select", "floodfill.update", "floodfill.scan.start"],
+                "floodfill.delete": ["floodfill.record"],
+                "floodfill.select": ["floodfill.unselect"],
+                "floodfill.unselect": ["floodfill.select"],
+                "floodfill.scan.start": ["floodfill.scan.stop"],
+                "point.record": ["point.create"],
+                "point.create": ["point.delete", "point.select", "point.update"],
+                "point.delete": ["point.record"],
+                "point.select": ["point.unselect"],
+                "point.unselect": ["point.select"],
+                "anchor.create": ["anchor.delete"],
+                "anchor.delete": ["anchor.create"],
+                "viewpoint.get": ["viewpoint"],
+                "camera.get": ["camera.set"],
+                "controller.set": ["controller.view", "controller.target"],
+                "model.hierarchy.get": ["viewpoint"],
+            }
+
+            let DISABLE =
+            {
+                "line.record": ["line.record"],
+                "line.create": ["line.create"],
+                "line.delete": ["line.delete", "line.select", "line.update", "line.unselect", "line.scan.start", "line.scan.stop"],
+                "line.select": ["line.select"],
+                "line.unselect": ["line.unselect"],
+                "line.scan.end": ["line.scan.stop"],
+                "polygon.record": ["polygon.record"],
+                "polygon.create": ["polygon.create"],
+                "polygon.delete": ["polygon.delete", "polygon.select", "polygon.update", "polygon.unselect", "polygon.scan.start", "polygon.scan.stop"],
+                "polygon.select": ["polygon.select"],
+                "polygon.unselect": ["polygon.unselect"],
+                "polygon.scan.end": ["polygon.scan.stop"],
+                "floodfill.record": ["floodfill.record"],
+                "floodfill.create": ["floodfill.create"],
+                "floodfill.delete": ["floodfill.delete", "floodfill.select", "floodfill.update", "floodfill.unselect", "floodfill.scan.start", "floodfill.scan.stop"],
+                "floodfill.select": ["floodfill.select"],
+                "floodfill.unselect": ["floodfill.unselect"],
+                "floodfill.scan.end": ["floodfill.scan.stop"],
+                "point.record": ["point.record"],
+                "point.create": ["point.create"],
+                "point.delete": ["point.delete", "point.select", "point.update", "point.unselect"],
+                "point.select": ["point.select"],
+                "anchor.create": ["anchor.create"],
+                "anchor.delete": ["anchor.delete"],
+            }
+
+            let COPY =
+            {
+                "line.record": "line.create",
+                "polygon.record": "polygon.create",
+                "floodfill.record": "floodfill.create",
+                "point.record": "point.create",
+                "viewpoint.get": "viewpoint",
+                "camera.get": "camera.set",
+            }
+
+            let COPY_FIELDS =
+            {
+                "camera.get": ["rotation", "position"]
+            }
+
+            let COMMENTS_SEND =
+            {
+                "line.record": 'Place two points to define the line',
+                "line.select": 'Double click to split line',
+                "polygon.record": 'Place three points to define the polygon',
+                "polygon.select": 'Double click to split edges',
+                "floodfill.record": 'Place one point to define the elevation',
+                "point.record": 'Place one point',
+            }
+            let COMMENTS_RECV =
+            {
+                "line.record": 'Send the "line.create" message',
+                "polygon.record": 'Send the "polygon.create" message',
+                "floodfill.record": 'Send the "floodfill.create" message',
+                "floodfill.create": 'Send the "floodfill.scan.start" message',
+                "point.record": 'Send the "point.create" message',
+                "anchor.create": 'Listen to the "anchor.update" message when moving camera',
+                "line.scan.start": 'Listen to line.scan.sample and/or line.scan.end',
+                "polygon.scan.start": 'Listen to polygon.scan.sample and/or polygon.scan.end',
+                "floodfill.scan.start": 'Listen to floodfill.scan.sample and/or floodfill.scan.end',
+            }
+
+            let viewer = document.querySelector("vx-viewer");
+
+            let ENABLED =
+                [
+                    "model.hierarchy.get",
+                    "viewer.image.get",
+                    "controller.set",
+                    "*.selected.get",
+                    "*.unselect",
+                    "camera.get",
+                    "camera.project",
+                    "viewpoint.get",
+                    "splitter",
+                    "anchor.create",
+                    "line.record",
+                    "line.get",
+                    "polygon.record",
+                    "polygon.get",
+                    "point.record",
+                    "point.get",
+                    "floodfill.record",
+                    "floodfill.get"
+                ];
+
+            viewer.on("viewer.load", (event) => {
+                ENABLED.forEach(item => {
+                    document.getElementById(item).classList.toggle("disabled", false)
+                })
+
+                document.querySelectorAll(".cloud").forEach(entry => entry.toggleAttribute("hidden", true));
+                document.querySelectorAll(".model").forEach(entry => entry.toggleAttribute("hidden", true));
+                document.querySelectorAll(".map").forEach(entry => entry.toggleAttribute("hidden", true));
+
+                document.querySelectorAll(`.${event.type}`).forEach(entry => entry.toggleAttribute("hidden", false));
+
+                /*
+                let type = document.getElementById("models").getSelected();
+
+                let navcube = document.querySelector(`div[slot="${type}"] .navcube`);
+                if (navcube) {
+                    navcube.classList.toggle("disabled", false);
+                }
+                let target = document.querySelector(`div[slot="${type}"] .target`);
+                if (target) {
+                    target.classList.toggle("disabled", false);
+                }
+                */
+            });
+
+
+            let sentContent = document.querySelector(".sent");
+            let receivedContent = document.querySelector(".received");
+            let sentType = document.getElementById("sent");
+            let receivedType = document.getElementById("received");
+
+            document.querySelector("ui-panel[name=Messages] button").addEventListener("click", async (event) => {
+                let content = JSON.parse(sentContent.value);
+
+                /*
+                if (sentType.textContent.textContent == "point.create")
+                {
+                    for (f in content.code)
+                    {
+                        content.code[f] = encodeURI(content.code[f]);
+                    }
+                }
+                */
+                let resonse = await viewer.wait(sentType.textContent, content);
+                if (sentType.textContent.textContent == "viewer.image.get") {
+                    receivedContent.textContent = resonse;
+                }
+                else {
+                    receivedContent.textContent = JSON.stringify(resonse, null, "  ");
+                }
+                receivedType.textContent = sentType.textContent;
+            });
+
+            document.querySelectorAll("aside ul").forEach(item => {
+                item.addEventListener("click", async (event) => {
+                    let li = event.target.closest("li");
+                    if (li && !li.classList.contains("disabled")) {
+                        if (MESSAGES[li.textContent]) {
+                            // display the comments
+                            if (COMMENTS_SEND[li.textContent]) {
+                                document.getElementById("comments").textContent = COMMENTS_SEND[li.textContent];
+                            }
+                            else {
+                                document.getElementById("comments").textContent = "";
+                            }
+
+                            // display object in sent message window
+                            /*
+                            if (li.textContent == "point.create")
+                            {
+                                let content = JSON.parse(JSON.stringify(MESSAGES[li.textContent]));
+                                for (f in content.code)
+                                {
+                                    content.code[f] = decodeURI(content.code[f]);
+                                    content.code[f] = content.code[f].replace('\\n', '\n');
+                                    //content.code[f] = content.code[f].replace(/(\r\n|\n|\r)/gm, "\n");
+                                }
+                                sentContent.value = JSON.stringify(content, null, "  ");
+                            }
+                            */
+
+                            sentContent.value = JSON.stringify(MESSAGES[li.textContent], null, "  ");
+                            sentType.textContent = li.textContent;
+
+                            // send message and wait for response
+                            receivedContent.textContent = "";
+                            let response = await viewer.wait(li.textContent, MESSAGES[li.textContent]);
+                            receivedType.textContent = li.textContent;
+
+                            // display object in recived message window
+                            if (sentContent.value == "viewer.image.get") {
+                                receivedContent.textContent = response;
+                            }
+                            else {
+                                receivedContent.textContent = JSON.stringify(response, null, "  ");
+                            }
+
+                            // display the comments
+                            if (COMMENTS_RECV[li.textContent]) {
+                                document.getElementById("comments").textContent = COMMENTS_RECV[li.textContent];
+                            }
+                            else {
+                                document.getElementById("comments").textContent = "";
+                            }
+
+                            // enable/disable other message types
+                            if (ENABLE[li.textContent]) {
+                                ENABLE[li.textContent].forEach(entry => {
+                                    document.getElementById(entry).classList.toggle("disabled", false);
+                                })
+                            }
+                            if (DISABLE[li.textContent]) {
+                                DISABLE[li.textContent].forEach(entry => {
+                                    document.getElementById(entry).classList.toggle("disabled", true);
+                                })
+                            }
+
+                            // recived message content to another message
+                            if (COPY[li.textContent]) {
+                                if (COPY_FIELDS[li.textContent]) {
+                                    COPY_FIELDS[li.textContent].forEach(field => {
+                                        MESSAGES[COPY[li.textContent]][field] = response[field];
+                                    })
+                                }
+                                else {
+                                    Object.assign(MESSAGES[COPY[li.textContent]], response);
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+
+            let LISTEN = ["error",
+                "viewer.load",
+                "viewer.mousedown",
+                "viewer.mousemove",
+                "viewer.dblclick",
+                "camera.update",
+                "model.dblclick",
+                "splitter.update",
+                "line.dblclick",
+                "line.update",
+                "line.scan.sample",
+                "line.scan.end",
+                "polygon.dblclick",
+                "polygon.update",
+                "polygon.scan.sample",
+                "polygon.scan.end",
+                "floodfill.dblclick",
+                "floodfill.update",
+                "floodfill.scan.sample",
+                "floodfill.scan.end",
+                "point.dblclick",
+                "point.update",
+                "anchor.update",
+            ];
+            viewer.on(LISTEN, (args, custom, handler) => {
+                if (handler === "error" || handler === "line.update" || handler === "polygon.update" || handler === "floodfill.update" || document.getElementById(handler).checked) {
+                    receivedContent.textContent = JSON.stringify(args, (key, value) => {
+                        if (value === Number.POSITIVE_INFINITY) {
+                            return "Infinity";
+                        }
+                        return value;
+
+                    }, "    ");
+                    receivedType.textContent = handler;
+                }
+
+                if (DISABLE[handler]) {
+                    DISABLE[handler].forEach(entry => {
+                        document.getElementById(entry).classList.toggle("disabled", true);
+                    })
+                }
+                if (ENABLE[handler]) {
+                    ENABLE[handler].forEach(entry => {
+                        document.getElementById(entry).classList.toggle("disabled", true);
+                    })
+                }
+            });
+
+            /*
+            document.querySelector("ui-selection-list").addEventListener("down", async (event) => {
+                document.querySelectorAll("aside li").forEach(item => {
+                    item.classList.toggle("disabled", true);
+                })
+
+                viewer.load(token[event.detail.id]);
+            });
+                */
+
+            {{^dataset}}
+            document.getElementById("inventory-dialog").hidden = false;
+            document.querySelector("iv-list").addEventListener("dataset-load", event =>
+            {
+                viewer.load(event.detail.token);
+                document.getElementById("inventory-dialog").hidden = true;
+            });
+            {{/dataset}}
+            {{#dataset}}
+                viewer.load(decodeURIComponent("{{{dataset}}}"));
+            {{/dataset}}
+        });
+
+    </script>
+
+</head>
+
+<body>
+    <aside>
+
+        <ui-panel active name="Instructions">
+            <header>
+            <span id="comments">Follow instructions shown here</span>
+            </header>
+        </ui-panel>
+        <ui-panel important name="Receive Message">
+            <div>
+                <div class="inputs">
+                    <label><input id="viewer.mousedown" type="checkbox">viewer.mousedown</label>
+                    <label><input id="viewer.mousemove" type="checkbox">viewer.mousemove</label>
+                    <label><input id="viewer.dblclick" type="checkbox">viewer.dblclick</label>
+                    <label><input id="viewer.load" type="checkbox" checked>viewer.load</label>
+                    <label class="sep "><input id="camera.update" type="checkbox">camera.update</label>
+                    <label class="sep"><input id="anchor.update" type="checkbox">anchor.update</label>
+                </div>
+                <div class="inputs">
+                    <label><input id="line.dblclick" type="checkbox">line.dblclick</label>
+                    <label><input id="line.scan.sample" type="checkbox">line.scan.sample</label>
+                    <label><input id="line.scan.end" type="checkbox">line.scan.end</label>
+                    <label class="sep"><input id="polygon.dblclick" type="checkbox">polygon.dblclick</label>
+                    <label><input id="polygon.scan.sample" type="checkbox">polygon.scan.sample</label>
+                    <label><input id="polygon.scan.end" type="checkbox">polygon.scan.end</label>
+                    <label class="sep"><input id="point.dblclick" type="checkbox">point.dblclick</label>
+                </div>
+                <div class="inputs model" hidden>
+                    <label><input id="model.dblclick" type="checkbox">model.dblclick</label>
+                </div>
+                <div class="inputs cloud" hidden>
+                    <label><input id="cloud.dblclick" type="checkbox">cloud.dblclick</label>
+                </div>
+                <div class="inputs map" hidden>
+                    <label><input id="floodfill.dblclick" type="checkbox">floodfill.dblclick</label>
+                    <label><input id="floodfill.scan.sample" type="checkbox">floodfill.scan.sample</label>
+                    <label><input id="floodfill.scan.end" type="checkbox">floodfill.scan.end</label>
+                    <label class="sep"><input id="splitter.update" type="checkbox">splitter.update</label>
+                </div>
+
+            </div>
+        </ui-panel>
+
+        <ui-panel important name="Send Message">
+            <!--<span style="color:grey"> all messages are mirrored back</span>-->
+            <div class="viewer">
+                <ul>
+                    <li id="viewer.unload" class="disabled">viewer.unload</li>
+                    <li id="viewer.update" class="disabled">viewer.update</li>
+                    <li id="viewer.image.get" class="sep disabled">viewer.image.get</li>
+                    <li id="raycast.overlay" class="disabled">raycast.overlay</li>
+                    <li id="raycast.content" class="disabled">raycast.content</li>
+                    <li id="viewpoint" class="sep disabled">viewpoint</li>
+                    <li id="viewpoint.get" class="disabled">viewpoint.get</li>
+                </ul>
+                <ul>
+                    <li id="anchor.create" class="disabled">anchor.create</li>
+                    <li id="anchor.delete" class="disabled">anchor.delete</li>
+                </ul>
+                 <ul>
+                    <li id="camera.set" class="disabled">camera.set</li>
+                    <li id="camera.get" class="disabled">camera.get</li>
+                    <li id="camera.project" class="disabled">camera.project</li>
+                    <li id="controller.set" class="sep disabled" ">controller.set</li>
+                    <li id="controller.view" class="disabled">controller.view</li>
+                    <li id="controller.target" class="disabled">controller.target</li>
+                </ul>
+            </div>
+
+            <div class="measure">
+                <ul>
+                    <li id="line.record" class="disabled">line.record</li>
+                    <li id="line.create" class="disabled">line.create</li>
+                    <li id="line.delete" class="disabled">line.delete</li>
+                    <li id="line.update" class="disabled">line.update</li>
+                    <li id="line.get" class="disabled">line.get</li>
+                    <li id="line.select" class="disabled">line.select</li>
+                    <li id="line.unselect" class="disabled">line.unselect</li>
+                </ul>
+                <ul>
+                    <li id="polygon.record" class="disabled">polygon.record</li>
+                    <li id="polygon.create" class="disabled">polygon.create</li>
+                    <li id="polygon.delete" class="disabled">polygon.delete</li>
+                    <li id="polygon.update" class="disabled">polygon.update</li>
+                    <li id="polygon.get" class="disabled">polygon.get</li>
+                    <li id="polygon.select" class="disabled">polygon.select</li>
+                    <li id="polygon.unselect" class="disabled">polygon.unselect</li>
+                </ul>
+                <ul>
+                    <li id="point.record" class="disabled">point.record</li>
+                    <li id="point.create" class="disabled">point.create</li>
+                    <li id="point.delete" class="disabled">point.delete</li>
+                    <li id="point.update" class="disabled">point.update</li>
+                    <li id="point.get" class="disabled">point.get</li>
+                    <li id="point.select" class="disabled">point.select</li>
+                    <li id="point.unselect" class="disabled">point.unselect</li>
+                </ul>
+                <ul>
+                    <li id="line.scan.start" class="disabled">line.scan.start</li>
+                    <li id="line.scan.stop" class="disabled">line.scan.stop</li>
+                    <li id="polygon.scan.start" class="sep disabled">polygon.scan.start</li>
+                    <li id="polygon.scan.stop" class="disabled">polygon.scan.stop</li>
+                    <li id="*.selected.get" class="sep disabled">*.selected.get</li>
+                    <li id="*.unselect" class="disabled">*.unselect</li>
+                </ul>
+            </div>
+
+            <div class="cloud" hidden>
+                <ul>
+                    <li id="cloud.point.max" class="disabled">cloud.point.max</li>
+                    <li id="cloud.point.scale" class="disabled">cloud.point.scale</li>
+                    <li id="cloud.shader.update" class="disabled">cloud.shader.update</li>
+                    <li id="navcube" class="navcube sep disabled">navcube</li>
+                    <li id="target" class="target disabled">target</li>
+                </ul>
+            </div>
+
+            <div class="model" hidden>
+                <ul>
+                    <li id="model.hierarchy.get" class="disabled">model.hierarchy.get</li>
+                    <!-- <li id=""  class="disabled">model.materials.get</li>  -->
+                    <li id="navcube" class="navcube sep disabled">navcube</li>
+                    <li id="target" class="target disabled">target</li>
+                </ul>
+                <ul>
+                    <li id="node.select" class="disabled">node.select</li>
+                    <li id="node.unselect" class="disabled">node.unselect</li>
+                    <li id="node.hide" class="disabled">node.hide</li>
+                    <li id="node.show" class="disabled">node.show</li>
+                    <li id="node.focus" class="disabled">node.focus</li>
+                    <li id="node.aabb.get" class="disabled">node.aabb.get</li>
+                </ul>
+            </div>
+
+            <div class="map" hidden>
+                <ul>
+                    <li id="floodfill.record" class="disabled">floodfill.record</li>
+                    <li id="floodfill.create" class="disabled">floodfill.create</li>
+                    <li id="floodfill.delete" class="disabled">floodfill.delete</li>
+                    <li id="floodfill.update" class="disabled">floodfill.update</li>
+                    <li id="floodfill.select" class="disabled">floodfill.select</li>
+                    <li id="floodfill.get" class="disabled">floodfill.get</li>
+                    <li id="floodfill.unselect" class="disabled">floodfill.unselect</li>
+                    <li id="floodfill.scan.start" class="disabled sep">floodfill.scan.start</li>
+                    <li id="floodfill.scan.stop" class="disabled">floodfill.scan.stop</li>
+                </ul>
+                <ul>
+                    <li id="splitter" class="disabled">splitter</li>
+                </ul>
+            </div>
+        </ui-panel>
+    </aside>
+
+    <main>
+        <ui-panel name="Viewer">
+             <vx-viewer>
+            </vx-viewer>
+        </ui-panel>
+
+        <ui-panel important name="Messages">
+            <div>
+                <p>Last Message Sent: <span id="sent"></span></p>
+                <textarea class="sent"></textarea>
+                <button>resend</button>
+            </div>
+            <div>
+                <p>Last Message Received: <span id="received"></span></p>
+                <textarea class="received"></textarea>
+            </div>
+        </ui-panel>
+    </main>
+
+    <ui-modal id="inventory-dialog" hidden close>
+        <p>Double-click to select dataset to be used in REST calls</p>
+        <iv-list key="{{{key}}}"></iv-list>
+    </ui-modal>    
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "app": "file:app/server",
+    "doc": "file:doc/server",
+    "gec": "file:_platform/gce",
+    "www": "file:www/server"
+  },
+  "scripts": {
+    "windows": "start npm start --prefix doc/server && start npm start --prefix app/server &&  start npm start --prefix www/server",
+    "start": "npm start --prefix doc/server & npm start --prefix app/server & npm start --prefix www/server &",
+    "app": "npm start --prefix app/server",
+    "doc": "npm start --prefix doc/server",
+    "www": "npm start --prefix www/server"
+  }
+}

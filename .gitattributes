@@ -1,0 +1,4 @@
+*.js  filter=tabspace
+*.html  filter=tabspace
+*.css  filter=tabspace
+*.conf  filter=tabspace

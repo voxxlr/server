@@ -1,0 +1,135 @@
+body 
+{
+    font-family:Nunito Sans,sans-serif;
+    font-size: 1em;
+    margin: 0;
+    user-select: none;
+}
+
+:root {
+    --primary: #0075FF;
+    --primary-transparent: #0075FF33;
+    --important: #FF7500;
+    --important-transparent: #FF750033;
+    --active: #00aa00;
+    --active-transparent: #00aa0033;
+    --selected: #D9D9D9;
+    --border: #ccc;
+    --border-transparent: #cccccc33;
+    --hover: #EAEAEA;
+    --disabled: #ccc;
+    --panel-header: #EAEAEA;
+    --info: #0075FF;
+    --warn: #ffcc00;
+    --severe: #cc3300;
+    --resolved: #339900;
+}
+
+:host([hidden]) { display: none; }
+:host([disabled]) 
+{
+    pointer-events: none; 
+    opacity: 0.5;  
+}
+
+::slotted(*[hidden]) 
+{ 
+    display: none !important;
+}
+
+
+
+
+input[type=text] { border: 1px solid var(--primary); }
+input:focus
+{
+    outline-color: var(--primary);
+}
+
+input, textarea, button
+{
+    font-family:inherit;
+    box-sizing: border-box;
+}
+
+input, textarea
+{
+    font-size: 1em;
+}
+
+textarea
+{
+    outline-offset: -1px;
+    outline: 1px solid var(--border);
+}
+
+button 
+{
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out,border-radius .15s ease;		
+    
+}
+
+button:active 
+{
+    transform: scale(0.98);
+}
+
+button:disabled { opacity: 0.5; }
+button:focus { outline: 0; }
+
+
+button.vx-secondary 
+{
+    margin-bottom: 0;
+    color: var(--primary);
+    border: 1px solid var(--border);
+    background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+} 
+
+button[active].vx-secondary 
+{ 
+    color: var(--active); 
+    border: 1px solid var(--border);
+    background-image: linear-gradient(to top, #ffffff, #e6e6e6);
+}
+
+button.vx-primary 
+{ 
+    margin-bottom: 0;
+    background: var(--primary); 
+    border: 1px solid var(--primary-transparent);
+    color: white; 
+}
+
+button[active].vx-primary 
+{ 
+    background: var(--active); 
+    border: 1px solid var(--active-transparent);
+    color: white; 
+}
+
+
+button.vx-tool i 
+{
+    display: block;
+    text-align: center;
+}
+
+button.vx-tool span 
+{
+    display: block;
+    margin-top: 0.4em;
+}
+
+button.vx-app { border-radius: 3px; }
+button.vx-app span  { margin-left: 0.5em; }
+button.vx-round {
+    border-radius: 50%;
+    width: 1.2em;
+    height: 1.2em;
+    padding: 0;
+    box-sizing: border-box;
+}

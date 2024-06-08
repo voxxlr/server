@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+
+    <script src="{{{app_domain}}}/ui.js"></script>
+
+    <script>
+        
+        window.addEventListener("load", function( event ) 
+        {
+            let text = document.getElementById("event");
+            let display = (event) =>
+            {
+                text.textContent = `<${event.target.tagName.toLowerCase()}> - ${event.type}: ${JSON.stringify(event.detail)}`
+            };
+
+            document.querySelectorAll("ui-dropdown").forEach(item => item.addEventListener("open", event => display(event)));
+            document.querySelectorAll("ui-dropdown").forEach(item => item.addEventListener("close", event => display(event)));
+
+            document.querySelectorAll("ui-collapsible-list").forEach(item => item.addEventListener("open", event => display(event)));
+            document.querySelectorAll("ui-collapsible-list").forEach(item => item.addEventListener("close", event => display(event)));
+            document.querySelectorAll("ui-collapsible-list").forEach(item => item.addEventListener("select", event => display(event)));
+            document.querySelectorAll("ui-collapsible-list").forEach(item => item.addEventListener("unselect", event => display(event)));
+
+            document.querySelectorAll("ui-selection-list").forEach(item => item.addEventListener("up", event => display(event)));
+            document.querySelectorAll("ui-selection-list").forEach(item => item.addEventListener("down", event => display(event)));
+            document.querySelectorAll("ui-selection-list").forEach(item => item.addEventListener("change", event => display(event)));
+
+            document.querySelectorAll("ui-tab-list").forEach(item => item.addEventListener("change", event => display(event)));
+
+            document.querySelectorAll("ui-toggle").forEach(item => item.addEventListener("toggle", event => display(event)));
+
+
+            document.querySelectorAll("ui-tag").forEach(item => item.addEventListener("tag-delete", event => display(event)));
+            document.querySelectorAll("ui-tag-list").forEach(item => item.addEventListener("tags-changed", event => display(event)));
+            document.querySelectorAll("ui-tag-search").forEach(item => item.addEventListener("changed", event => display(event)));
+
+            document.querySelectorAll("ui-slider").forEach(item => item.addEventListener("change", event => display(event)));
+            document.querySelectorAll("ui-range").forEach(item => item.addEventListener("change", event => display(event)));
+            
+            document.querySelectorAll("ui-popup").forEach(item => item.addEventListener("close", event => display(event)));
+
+            document.querySelectorAll("ui-modal").forEach(item => item.addEventListener("open", event => display(event)));
+            document.querySelectorAll("ui-modal").forEach(item => item.addEventListener("close", event => display(event)));
+
+
+
+            document.querySelector("ui-panel[name='<ui-stack>'] > ui-selection-list").addEventListener("down", (event)=>
+            {
+                document.querySelector("ui-panel[name='<ui-stack>'] > ui-stack").show(`div:nth-of-type(${event.detail.textContent})`);
+            });
+
+            document.querySelector("ui-panel[name='<ui-popup>'] > button").addEventListener("click", (event)=>
+            {
+                document.querySelector("ui-panel[name='<ui-popup>'] > ui-popup").open();
+            });
+ 
+            document.querySelector("ui-panel[name='<ui-modal>'] > button").addEventListener("click", (event)=>
+            {
+                document.querySelector("ui-panel[name='<ui-modal>'] > ui-modal").toggleAttribute("hidden", false);
+            });
+                   
+       });
+        
+    </script>
+    
+    <style>
+        
+        body { 
+            position: absolute;
+            overflow: hidden; 
+            height:100%; 
+            width: 100%; 
+            user-select: none; 
+            padding: 0em 1em 1em 1em;
+            box-sizing: border-box;  
+        }
+
+
+        div.ipsum
+        {
+            vertical-align: center;
+            text-align: center;
+            padding: 0.5em;
+        }
+        div.ipsum.border
+        {
+            border: 1px solid var(--border);
+            box-sizing: border-box;
+        }
+
+
+        /* ui-tab */
+        ui-panel[name='<ui-tab-list>']  div[slot=content]
+        {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 10px;
+            overflow: auto;
+        }
+        ui-panel[name='<ui-tab-list>']  div[slot=content] > ui-panel {  width: 25em; }
+        ui-panel[name='<ui-tab-list>'] { height: 100%; display: block; }
+        ui-panel[name='<ui-tab-list>'] ui-tab-list {  height: 100%; }
+        ui-panel[name='<ui-tab-list>'] ui-tab-list  > span 
+        { 
+            color:darkgreen; 
+            font-weight: bold; 
+            margin-left: auto;  
+            margin-right: 3em; 
+        }
+
+        /* ui-collapsible */
+        ui-panel[name='<ui-collapsible-list> <ui-collapsible>']  { min-height: 30em; }
+ 
+        /* ui-dropdown */
+        ui-panel[name='<ui-dropdown>'] div:hover:not([active]) { border: 3px solid var(--border); }
+
+        /* ui-toggle */
+        ui-panel[name='<ui-toggle>']  > div
+        {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            height: 23em;
+            margin: 2em;
+        }       
+        ui-toggle
+        {
+            position: relative;
+            height: 20%;
+            background-color: var(--border);
+        }
+
+        ui-toggle > p 
+        {
+            text-align: center;
+            vertical-align: center;
+        }
+
+        ui-toggle[top] { transition: height 400ms; }
+        ui-toggle[top][open] { height: 20%; }
+        ui-toggle[top][close] { height: 0%;  }
+
+        ui-toggle[right]  { transition: width 400ms;  align-self: end; }
+        ui-toggle[right][open] { width: 100%; }
+        ui-toggle[right][close] { width: 0%; }
+
+        ui-toggle[left] { transition: width 400ms; }
+        ui-toggle[left][open] { width: 100%; }
+        ui-toggle[left][close] { width: 0%; }
+
+        ui-toggle[bottom] { transition: height 400ms; }
+        ui-toggle[bottom][open] { height: 20%; }
+        ui-toggle[bottom][close] { height: 0%;  }
+            
+        /* ui-slider */
+        ui-panel[name='<ui-slider> <ui-range>']  > div
+        {
+            display: flex;
+            gap: 2em;
+            height: 10em;
+        }
+        ui-range[horz] { margin-top:2em; margin-bottom:2em; }
+ 
+
+        /* ui-stack */
+        ui-stack > div
+        {
+            width: 200px;
+            height: 200px;
+            vertical-align: center;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-sizing: border-box;
+        }
+
+        /* ui-popup */
+
+        input[text][active] { background: blue }
+        
+
+        div.space { margin-top: 1em }
+            
+        .uis-horizontal
+        {
+            display: flex;
+            flex-direction: row;
+        }
+
+    </style>
+        
+</head>
+
+<body>
+
+    <ui-panel name="<ui-tab-list>" important>
+
+        <ui-tab-list>
+            <ui-option slot="header" value="1" active>Implicit - no code</ui-option>
+            <ui-option slot="header" value="2">Explicit - requires calls</ui-option>
+            <div slot="content" active>
+                <ui-panel name="<ui-dropdown>" important>
+                    <ui-dropdown>
+                        <div class="ipsum border"><p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, </div>
+                        <div class="ipsum border" active><p>eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim</p></div>
+                        <div class="ipsum border"><p>ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione</div>
+                    </ui-dropdown>
+                    
+                    <ui-dropdown>
+                        <ui-option value="1">Option 1</ui-option>
+                        <ui-option value="2" active>Option 2</ui-option>
+                        <ui-option value="3">Option 3</ui-option>
+                        <ui-option value="4">Option 4</ui-option>
+                    </ui-dropdown>
+                </ui-panel>
+                <ui-panel name="<ui-collapsible-list> <ui-collapsible>" important>
+                    <ui-collapsible-list selectable>
+                        <ui-collapsible open>
+                            <div slot="header">
+                                <i class="fas fa-eye"></i>
+                                <span slot="label">Header 1</span>
+                            </div>
+                            <div class="ipsum">
+                                <p>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? </p>
+                            </div>
+                        </ui-collapsible>
+                        <ui-collapsible>
+                            <div slot="header">
+                                <i class="fas fa-grip-lines"></i>
+                                <span slot="label">Header 2</span>
+                            </div>
+                            <div class="ipsum">
+                                <p>Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur</p>
+                            </div>
+                        </ui-collapsible>
+                        <ui-collapsible>
+                            <div slot="header">
+                                <i class="fas fa-bullseye"></i>
+                                <span slot="label">Header 3</span>
+                            </div>
+                            <div class="ipsum">
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                            </div>
+                        </ui-collapsible>
+                    </ui-collapsible-list>
+                </ui-panel>
+                <ui-panel name="<ui-selection-list>" important>
+                    <ui-selection-list single class="uis-horizontal">
+                        <button class="vx-primary">Apple</button>
+                        <button class="vx-primary" active>Orange</button>
+                        <button class="vx-primary">Banana</button>
+                        <button class="vx-primary">Pear</button>
+                    </ui-selection-list>
+                    <div class="space"></div>
+                    <ui-selection-list>	
+                        <ui-option>Option 1</ui-option>
+                        <ui-option active>Option 2</ui-option>
+                        <ui-option>Option 3</ui-option>
+                    </ui-selection-list>
+                </ui-panel>                
+                <ui-panel  name="<ui-checkbox>" important>
+                    <ui-checkbox></ui-checkbox>
+                </ui-panel>
+                 <ui-panel  name="<ui-toggle>" important>
+                    <div>
+                        <ui-toggle top open>
+                            <div class="ipsum"><p>Ut enim ad minim veniam</p></div>
+                        </ui-toggle>
+                        <ui-toggle right open>
+                            <div class="ipsum"><p>Duis aute irure dolor in reprehenderit in</p></div>
+                        </ui-toggle>
+                        <ui-toggle left open>
+                            <div class="ipsum"><p>At vero eos et accusamus et iusto odio</p></div>
+                        </ui-toggle>
+                        <ui-toggle bottom open>
+                            <div class="ipsum"><p>Nam libero tempore, cum soluta nobis</p></div>
+                        </ui-toggle>
+                    </div>
+                </ui-panel>
+                <ui-panel name="<ui-tag-list> <ui-tag-input> <ui-tag-search>" important>
+                    <ui-tag-list tags="one,tow,three">
+                        <ui-tag-input placeholder="tags..." type="text" ></ui-tag-input>
+                    </ui-tag-list>
+                    <ui-tag-search></ui-tag-search>
+                </ui-panel>
+                <ui-panel  name="<ui-slider> <ui-range>">
+                    <ui-slider horz></ui-slider>
+                    <ui-range horz></ui-range>
+                    <div>
+                        <ui-slider vert></ui-slider>
+                        <ui-range vert></ui-range>
+                    </div>
+                </ui-panel>
+           </div>
+            <div slot="content">
+                <ui-panel name="<ui-popup>" important>
+                    <button class="vx-primary">Open</button>
+                    <ui-popup hidden>
+                        <div class="ipsum">
+                            <p>Nam libero tempore, cum soluta nobis</p>
+                            <button class="vx-primary">Apple</button>
+                        </div>
+                    </ui-popup>
+                </ui-panel>         
+                <ui-panel name="<ui-modal>" important>
+                    <button class="vx-primary">Open</button>
+                    <ui-modal close hidden>
+                        <div class="ipsum">
+                            <p>"Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"</p>
+                        </div>
+                    </ui-modal>
+                </ui-panel>                 
+
+                <ui-panel name="<ui-stack>" important>
+                    <ui-selection-list single required>
+                        <button class="vx-primary" active>1</button>
+                        <button class="vx-primary">2</button>
+                        <button class="vx-primary">3</button>
+                        <button class="vx-primary">4</button>
+                    </ui-selection-list>
+                    <ui-stack>
+                        <div active>
+                            <div class="ipsum"><p>Ut enim ad minim veniam</p></div>
+                        </div>
+                        <div>
+                            <div class="ipsum"><p>Duis aute irure dolor in reprehenderit in</p></div>
+                        </div>
+                        <div>
+                            <div class="ipsum"><p>At vero eos et accusamus et iusto odio</p></div>
+                         </div>
+                        <div>
+                            <div class="ipsum"><p>Nam libero tempore, cum soluta nobis</p></div>
+                        </div>
+                    </ui-stack>
+                </ui-panel>
+            </div>
+            <span id="event"></span>
+        </ui-tab-list>
+
+    </ui-panel>
+</body>
+
+
+</html>

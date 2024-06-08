@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>Upload</title>
+    <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+    
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+     
+    <script src="{{{app_domain}}}/ui.js"></script>
+
+    <script src="{{{app_domain}}}/voxxlr/upload/va-config.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/upload/va-dropzone.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/upload/va-datasets.js"></script>
+
+    <style>
+
+        body {
+            height: 100vh;
+        }
+
+
+        ui-section:nth-of-type(1) { width: 20em; }
+        ui-section:nth-of-type(2) { flex: 2; }
+
+        main {
+            position: relative;
+            display: flex;
+            align-items: stretch;
+            height: 100%;
+        }
+
+        ui-modal > div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        ui-stack { flex: 1 }
+        ui-stack > div.datatype 
+        {
+            display: flex;
+            font-size: 0.7rem;
+            height: 100%;
+        }
+
+        ui-stack > div.processing {
+            display: flex;
+            font-size: 0.7rem;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        ui-stack > div.processing[state=STOPPING] button,
+        ui-stack > div.processing[state=STAGING] button 
+        {
+            display: none;
+        }
+
+        ui-stack > div.processing span { display: none; }
+
+        ui-stack > div.processing[state=STOPPING] span.stopping { display: block; }
+        ui-stack > div.processing[state=STAGING] span.staging { display: block; }
+
+        .dropzone { flex-grow: 2; }
+        va-datasets { font-size: 0.7rem; }
+
+        .options 
+        {
+            width: 20em;
+            position: relative;
+        }
+
+        .options > button  { width: 100%; }
+
+        ui-modal > div { margin-bottom: 1em }
+        ui-option > span { font-weight: bold; }
+        ui-option > p {
+            font-size: 0.8em;
+            margin-top: 0;
+            color: var(--backgroud);
+        }
+                
+    </style>  
+     
+    <script>
+ 
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    
+        function loadApp()
+        {
+            document.querySelectorAll(".dropzone").forEach(entry =>
+            {
+                entry.addEventListener("upload-start", event =>
+                {
+                    let option = event.currentTarget.nextElementSibling;
+                    let button = option.querySelector("button");
+                    button.toggleAttribute("disabled", true);
+                });
+                entry.addEventListener("update-status", event =>
+                {
+                    let option = event.currentTarget.nextElementSibling;
+                    let button = option.querySelector("button");
+                    button.toggleAttribute("disabled", !event.detail.valid);
+                });
+            });
+
+            document.querySelector("va-map-zone").addEventListener("file-meta", event =>
+            {
+                console.log(event.detail.path + "-" + event.detail.name);
+
+                let collapsible = document.querySelector("va-datasets").getSelected();
+               
+                fetch(`/voxxlr/upload/file/${collapsible.id}/${event.detail.path}`,
+                {
+                    method: 'PATCH',
+                    headers: new Headers({
+                        'x-api-key': '{{{key}}}',
+                        'Content-Type': "application/json"
+                    }),
+                    body: JSON.stringify(event.detail.value)
+                });
+
+            });
+
+            updateState = function(collapsible)
+            {
+                let stack = document.querySelector("ui-stack");
+
+                let state = collapsible.getAttribute("state");
+                let button = collapsible.querySelector("div[slot=header] .fa-trash");
+                switch (state)
+                {
+                    case "RUNNING":
+                    case "STAGING":
+                    case "TERMINATED":
+                    case "STOPPING":
+                        {
+                            stack.show("[name=processing]");
+                            stack.querySelector(".processing").setAttribute("state", state);
+                            button.toggleAttribute("disabled", true);
+                        }
+                        break;
+                    case "undefined":
+                        {
+                            stack.show("[name=instructions]");
+                            stack.querySelector(".processing").removeAttribute("state");
+                            button.toggleAttribute("disabled", true);
+                        }
+                        break;
+                    case "idle":
+                    case "failed":
+                        {
+                            stack.show(`[name=${collapsible.getAttribute("type")}]`);
+                            stack.querySelector(".processing").removeAttribute("state");
+                            button.toggleAttribute("disabled", false);
+                        }
+                        break;
+                }
+            }
+            
+            document.querySelector("va-datasets").addEventListener("unselect", event =>
+            {
+                let stack = document.querySelector("ui-stack");
+                stack.show(".instructions");
+                //panel.querySelector("button").toggleAttribute("disabled", true);
+            });
+
+            document.querySelector("va-datasets").addEventListener("select", event =>
+            {
+                let panel = document.querySelector(`ui-stack > div[name=${event.detail.getAttribute("type")}]`);
+
+                let zone = panel.querySelector(".dropzone");
+                zone.setAttribute("dataset", event.detail.getAttribute("id"));
+
+                updateState(event.detail);
+            });
+
+            document.querySelector("va-datasets").addEventListener("update", event =>
+            {
+                if (event.detail.hasAttribute("open"))
+                {
+                    updateState(event.detail);
+                }
+            });
+
+            document.querySelector("button[name=create]").addEventListener("click", async (event) =>
+            {
+                document.querySelector("ui-modal").hidden = false;
+            });
+            document.querySelector("button[name=confirm]").addEventListener("click", async (event) =>
+            {
+                let modal = document.querySelector("ui-modal");
+                modal.hidden = true;
+                let option = modal.querySelector("ui-modal ui-option[active]");
+                document.querySelector("va-datasets").createDataset(modal.querySelector("input").value, option.getAttribute("value"));
+            });
+
+            document.querySelectorAll("ui-modal ui-option").forEach(item =>
+            {
+                item.addEventListener("click", event =>
+                {
+                    document.querySelector("ui-modal ui-option[active]").toggleAttribute("active", false);
+                    event.currentTarget.toggleAttribute("active", true);
+                });
+            });
+
+            document.querySelector("button[name=abort]").addEventListener("click", async (event) =>
+            {
+                let collapsible = document.querySelector("va-datasets").getSelected();
+                await fetch(`/voxxlr/upload/process/${collapsible.id}`,
+                {
+                    method: 'DELETE',
+                    headers: new Headers({ 'x-api-key': "{{{key}}}" })
+                }).then(response =>
+                {
+                    collapsible.setAttribute("state", "STOPPING");
+                    updateState(collapsible);
+                });
+            });
+
+            document.querySelectorAll("div.options > button").forEach(button =>
+            {
+                button.addEventListener("click", event =>
+                {
+                    event.currentTarget.toggleAttribute("disabled", true);
+
+                    let container = event.currentTarget.closest(".datatype");
+
+                    let config = container.querySelector(".dropzone").getConfig();
+                    container.querySelectorAll("ui-collapsible").forEach(item =>
+                    {
+                        item.lastElementChild.get(config);
+                    });
+
+                    let collapsible = document.querySelector("va-datasets").getSelected();
+                    fetch(`/voxxlr/upload/process`,
+                    {
+                        method: 'POST',
+                        headers: new Headers({
+                            'x-api-key': "{{{key}}}",
+                            'Content-Type': "application/json"
+                        }),
+                        body: JSON.stringify(config)
+                    }).then(async (response) => 
+                    {
+                        collapsible.setAttribute("state", "STAGING");
+                        updateState(collapsible);
+                    });
+                });
+            });
+        }
+        
+        window.addEventListener("load", async function( event ) 
+        {
+            {{#password}}
+            document.querySelector("ui-password").addEventListener("verified", async event=>
+            {
+                loadApp();
+            })
+            {{/password}}
+            
+            {{^password}}
+            loadApp();
+            {{/password}}
+        });
+    
+    </script>
+      
+</head>
+
+
+<body>
+
+    <main>
+        <ui-section label="Datasets">
+            <nav>
+                <button name="create" class="vx-primary">Create dataset ...</button>
+                <va-datasets  instances='{{{instances}}}' key='{{{key}}}'></va-datasets>
+            </nav>
+        </ui-section>
+        
+        <ui-section label="Upload">
+            <ui-stack>
+                <div name="cloud" class="datatype">
+                    <va-pointcloud-zone class="dropzone" key="{{{key}}}" title="Point Cloud" waiting></va-pointcloud-zone>		
+                    <div class="options">
+                        <button class="vx-primary" disabled>Process ...</button>
+                        <ui-collapsible-list>
+                            <ui-collapsible>
+                                <span slot="header">Density</span>
+                                <va-density></va-density>		
+                            </ui-collapsible>
+                            <ui-collapsible>
+                                <span slot="header">Resolution</span>
+                                <va-resolution></va-resolution>	
+                            </ui-collapsible>
+                            <ui-collapsible>
+                                <span slot="header">Transform</span>
+                                <va-coordinates></va-coordinates>		
+                            </ui-collapsible>
+                            <ui-collapsible>
+                                <span slot="header">Units</span>
+                                <va-units></va-units>	
+                            </ui-collapsible>
+                        </ui-collapsible-list>
+                    </div>
+                </div>
+                <div name="model" class="datatype">
+                    <va-model-zone class="dropzone" key="{{{key}}}" title="3D Model" waiting></va-model-zone>		
+                    <div class="options">
+                        <button class="vx-primary" disabled>Process ...</button>
+                        <ui-collapsible-list>
+                            <ui-collapsible label="Transform">
+                                <va-coordinates></va-coordinates>		
+                            </ui-collapsible>
+                        </ui-collapsible-list>
+                    </div>
+                </div>
+                <div name="map" class="datatype">
+                    <va-map-zone class="dropzone" title="2D Maps" key="{{{key}}}" waiting></va-map-zone>		
+                    <div class="options">
+                        <button class="vx-primary" disabled>Process ...</button>
+                    </div>
+                </div>
+                <div name="panorama" class="datatype">
+                    <va-panorama-zone class="dropzone"  key="{{{key}}}" title="Panoramic Image" waiting></va-panorama-zone>		
+                    <div class="options">
+                        <button class="vx-primary" disabled>Process ...</button>
+                    </div>
+                </div>
+                <div name="processing" class="processing">
+                    <button class="vx-primary" name="abort">Abort processing</button>
+                    <span class="stopping">Stopping processor..</span>
+                    <span class="staging">Starting processor..</span>
+                </div>
+                <div name="instructions" class="instructions" active>
+                    <div>instructions</div>
+                </div>
+            </ui-stack>
+        </ui-section>	
+    </main>
+        
+    <ui-modal hidden close>
+        <div>
+            <ui-option value="cloud" active><span>Point Cloud</span><p>e57, las, laz...</p></ui-option>
+            <ui-option value="model"><span>3D Models</span><p>glTF, IFC</p></ui-option>
+            <ui-option value="map"><span>2D Map</span><p>tiff, color, dem ..</p></ui-option>
+            <ui-option value="panorama"><span>Panoramic Image</span><p>jpeg, jpg</p></ui-option>
+        </div>
+        <input type="text" placeholder="name" value="name"/>
+        <button name="confirm" class="vx-primary">Create ...</button>
+    </ui-modal>	
+
+{{#password}}
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <ui-password password="{{{password}}}"></ui-password> 	
+{{/password}}
+    
+</body>
+
+</html>

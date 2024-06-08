@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link rel="shortcut icon" href="https://www.voxxlr.com/favicon.ico" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+        window.www_domain = "{{{www_domain}}}";
+    </script>
+    
+    <script src="{{{www_domain}}}/va-login.js"></script>
+    
+    <style>
+        body
+        {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+        }
+    </style>  
+     
+    <script>
+    
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        window.addEventListener("load", async function( event ) 
+        {
+            let login = document.querySelector("va-login");
+            login.addEventListener("login", event=>
+            {
+                {{#forward}}
+                window.location.assign(`{{{forward}}}?account=${encodeURIComponent(event.detail)}`);
+                {{/forward}}
+            });
+
+            login.init();
+        });
+    
+    </script>
+      
+</head>
+
+<body>
+
+    <va-login oauth2='{{{oauth2}}}'></va-login>
+
+</body>
+
+</html>

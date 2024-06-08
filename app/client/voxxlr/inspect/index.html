@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+
+    <script>
+        window.doc_domain = "{{{doc_domain}}}";
+        window.app_domain = "{{{app_domain}}}";
+    </script>
+    
+    <!-- Voxxlr UI components -->    
+    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    <script src="{{{app_domain}}}/ui.js"></script>
+    
+    <!-- Voxxlr App components -->    
+    <script src="{{{app_domain}}}/vx-viewer.js"></script>
+    <script src="{{{app_domain}}}/vx-inventory.js"></script>
+    <script src="{{{app_domain}}}/vx-header.js"></script>
+ 
+    <!-- Procore App components -->    
+    <script src="{{{app_domain}}}/voxxlr/inspect/issue.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/inspect/2d.js"></script>
+    <script src="{{{app_domain}}}/voxxlr/inspect/3d.js"></script>
+  
+    <script>
+        
+        window.addEventListener("load", async (event) => 
+        {
+            document.addEventListener('contextmenu', event => event.preventDefault());
+            
+            let currentDataset = null;
+
+            let viewer3d = document.querySelector("view-3d");
+
+            // TODO deal with viewer3d.getViewer()
+            
+            
+            // 
+            // Header
+            //
+            
+            let header = document.querySelector("vx-header");
+            header.attach(viewer3d.getViewer())
+            header.addEventListener("header-inventory", event =>
+            {
+                inventory.select(currentDataset);
+                document.getElementById("inventory-dialog").hidden = false;
+            });
+            
+            // 
+            // Inventory
+            //
+
+            let inventory = document.querySelector("vx-inventory");
+            inventory.addEventListener("dataset-load", async event=>
+            {
+                let viewer = viewer3d.getViewer()
+                viewer.load(await inventory.getToken(event.detail));
+                inspect.hidden = true;
+                document.getElementById("inventory-dialog").hidden = true;
+            });
+            inventory.addEventListener("dataset-select", async (event) =>
+            {
+                fetch(`${window.doc_domain}/meta/issues`,
+                { 
+                    headers: new Headers({ 'x-doc-token': await inventory.getToken(event.detail) })
+                }).then(async (response) =>
+                {
+                    let list = await response.json();
+                    
+                    while (inventory.firstElementChild)
+                    {
+                        inventory.firstElementChild.remove();
+                    }
+                    
+                    for (var id in list)
+                    {
+                        let issue = document.createElement("issue-item");
+                        issue.init(id, list[id]);
+                        inventory.appendChild(issue);
+                    }
+                })
+            });
+            
+            
+            //
+            // inspection button
+            //
+            
+            let issueList = document.querySelector("issue-list");
+            
+            let inspect = document.getElementById("inspect");
+            let updateInspect = (status)=>
+            {
+                if (status == 0)
+                {
+                    inspect.querySelector("i").setAttribute("class","far fa-3x fa-square");
+                    inspect.removeAttribute("status");
+                    inspect.querySelector("span").textContent = "Click to Complete"
+                }
+                else
+                {
+                    inspect.querySelector("i").setAttribute("class","far fa-3x fa-check-square");
+                    inspect.setAttribute("status", `${status}`);
+                    inspect.querySelector("span").textContent = "Inspected"
+                }
+            }
+            let updateStatus = (status) =>
+            {
+                currentDataset.meta.status = status;
+                document.querySelector("vx-inventory").update(currentDataset.id, status);
+                
+                fetch(`${window.doc_domain}/meta`, 
+                { 
+                    method: 'PATCH', 
+                    headers: new Headers({
+                     'x-doc-token': currentDataset.token,
+                     'Content-Type': "application/json"
+                    }),
+                    body: JSON.stringify([{ op:"replace", path:"/status", value: currentDataset.meta.status }])
+                })
+                .then(response =>
+                {
+                    if (response.ok)
+                    {
+                        updateInspect(status);
+                    }
+                });  				
+            }
+            inspect.querySelector("i").addEventListener("click", event=>
+            {
+                if (currentDataset.meta.status == 0)
+                {
+                    updateStatus(issueList.getMaximum());
+                }
+                else
+                {
+                    document.getElementById("inspect-dialog").hidden = false;
+                }
+            });
+            
+            issueList.addEventListener("issue-changed", event =>
+            {
+                if (currentDataset.meta.status != 0)
+                {
+                    updateStatus(issueList.getMaximum());
+                }
+            });
+
+            document.querySelector("#inspect-dialog button[name='yes']").addEventListener("click", event=>
+            {
+                updateStatus(0)
+                issueList.clear();
+                document.getElementById("inspect-dialog").hidden = true;
+            });
+            document.querySelector("#inspect-dialog button[name='no']").addEventListener("click", event=>
+            {
+                document.getElementById("inspect-dialog").hidden = true;
+            });
+            
+            
+            //
+            // 3D Viewer
+            //
+            
+            viewer3d.addEventListener("viewer.load", async (event) => 
+            {
+                let meta = event.detail.meta;
+                currentDataset = event.detail;
+                
+                document.getElementById("create").disabled = false;
+                
+                let images = document.querySelector("#images");
+                while (images.firstElementChild)
+                {
+                    images.firstElementChild.remove();
+                }
+                
+                viewer2d.setAttribute("camera", JSON.stringify(meta.photogrammetry.camera))
+                viewer2d.setAttribute("token", event.detail.token)
+                
+                issueList.setAttribute("token", event.detail.token);
+                document.querySelector("issue-form").setAttribute("token", event.detail.token);
+                
+                inspect.hidden = false;
+                updateInspect(meta.status);
+                
+                let template = document.querySelector("template");
+                let c = 0;
+                for (var id in meta.photogrammetry.image)
+                {
+                    if (c++ == 25)
+                    {
+                        break;
+                    }
+                    
+                    await fetch(`${window.doc_domain}/file/thumbs/${id}`, 
+                    { 
+                        method: 'GET', 
+                        headers: new Headers({
+                         'x-doc-token': event.detail.token, 
+                         'Content-Type': "application/json",
+                        })
+                    }).then(async (response) =>
+                    {
+                        if (response.ok)
+                        {
+                            let matrix = meta.photogrammetry.image[id];
+                            
+                            let files = await response.json();
+                            
+                            let entry = template.content.cloneNode(true);
+                            entry.firstElementChild.id = id;
+                            entry.firstElementChild.matrix = matrix;
+                            
+                            let img = entry.querySelector('img')
+                            img.src = files[0].url;
+                            images.appendChild(entry);
+                            
+                            /*
+                            photo.point = {
+                                x: image.position[0],
+                                y: image.position[2], 
+                                z: -image.position[1]
+                            }
+                            photo.id = id;
+                            viewer3d.post("point.create", photo, {});
+                            */
+                        }
+                    })
+                }
+                
+                document.querySelector("#views ui-selection-list").select(document.querySelector("button[name='3D']"), true);
+                
+            });
+            viewer3d.addEventListener("viewer.unload", (args) => 
+            {
+                document.getElementById("create").disabled = true;
+            });
+            
+            //
+            // 2D Viewer
+            //
+            
+            let viewer2d = document.querySelector("view-2d");
+            document.querySelector("#images").addEventListener("down", event=> 
+            {
+                viewer3d.setCamera(event.detail.matrix);
+            
+                let button = document.querySelector("#views > ui-selection-list button[name='2D']");
+                if (button.hasAttribute('active'))
+                {
+                    viewer2d.loadImage(event.detail.id);
+                }
+                else
+                {
+                    button.disabled = false;	    				
+                }
+            })
+            
+            document.querySelector("#views > ui-selection-list").addEventListener("down", event=>
+            {
+                let name = event.detail.getAttribute("name");
+                if (name === "2D")
+                {
+                    let image = document.querySelector("#images > div[active]");
+                    viewer2d.loadImage(image.id);
+                }
+                const stack = document.querySelector("#views > ui-stack");
+                stack.show(`[name="${event.detail.getAttribute("name")}"]`);
+            });
+            
+                
+                
+            //
+            // Issue  list and create 
+            //
+            let component = document.querySelector("issue-form")
+            component.addEventListener("issue-created", async (event) =>
+            {
+                event.target.parentNode.hidden = true;
+                document.querySelector("issue-list").add(event.detail.id, event.detail.issue, true);
+                
+                updateStatus(issueList.getMaximum())
+            });
+            
+            document.querySelector("issue-list").addEventListener("issue-select", event =>
+            {
+                let group = document.querySelector("#views > ui-selection-list");
+
+                let record = event.detail;
+                if (record.hasOwnProperty("3D"))
+                {
+                    group.select(group.querySelector("button[name='3D']"), true);
+                    viewer3d.setView(record["3D"]);
+                }
+                else if (record.hasOwnProperty("2D"))
+                {
+                    viewer2d.setView(record["2D"]);
+                    
+                    let images = document.querySelector("#images");
+                    let selected = images.querySelector(".preview[active]");
+                    if (!selected || selected.id != record["2D"].image)
+                    {
+                        images.select(images.querySelector(`#${record["2D"].image.replaceAll("\.","\\\.")}`), true);
+                    }
+                    
+                    let button = group.querySelector("button[name='2D']")
+                    if (!button.hasAttribute("active"))
+                    {
+                        group.select(group.querySelector("button[name='2D']"), true);
+                    }
+                }
+            });
+                
+            document.getElementById("create").addEventListener("click", async (event)=>
+            {
+                // open create dialog
+                let dialog = document.querySelector("issue-form");
+                
+                let config = {};
+                
+                let button = document.querySelector("#views > ui-selection-list > button[active]");
+                if (button.getAttribute("name") === "3D")
+                {
+                    config["3D"] = await viewer3d.getView();
+                    dialog.setAttribute("image", await viewer3d.getImage());
+                }
+                else
+                {
+                    config["2D"] = await viewer2d.getView();
+                    dialog.setAttribute("image", await viewer2d.getImage());
+                }
+
+                // pass preview image & id to create dialog
+                dialog.setAttribute("config", JSON.stringify(config));
+                dialog.setAttribute("id", currentDataset.id);
+                dialog.parentNode.hidden = false;
+            });
+            
+            
+            //
+            // Startup
+            //
+            {{#password}}
+            document.querySelector("ui-password").addEventListener("verified", async event=>
+            {
+                let viewer = viewer3d.getViewer()
+
+                {{#dataset}}
+                await viewer.load(decodeURIComponent("{{{dataset}}}"));
+                {{/dataset}}
+                {{^dataset}}
+                document.getElementById("inventory-dialog").hidden = false;
+                {{/dataset}}
+            })
+            {{/password}}
+            
+            {{^password}}
+            let viewer = viewer3d.getViewer()
+            {{#dataset}}
+            await viewer.load(decodeURIComponent("{{{dataset}}}"));
+            {{/dataset}}
+            {{^dataset}}
+            document.getElementById("inventory-dialog").hidden = false;
+            {{/dataset}}
+            {{/password}}
+
+        });
+        
+    </script>
+    
+    <style>
+        
+        body 
+        { 
+            overflow: hidden; 
+            height:100vh; 
+            width: 100vw;
+            user-select: none; 
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        main
+        {
+            flex: 2;
+            display: flex;
+            align-items: stretch;
+            overflow: hidden;
+            margin-top: 0.5em;
+        }
+        
+        ui-toggle[left]
+        {
+            position: relative;	
+            display: flex;
+            flex-direction: column;
+            justify-content: stretch;
+            padding: 0 10px 10px 10px; 
+            transition: margin 400ms;
+            flex-basis: 400px;
+            min-width: 400px;
+            border-right: solid 1px var(--border); 
+        }
+        ui-toggle[left][open] { margin-left: 0px; }
+        ui-toggle[left][close] { margin-left: -420px; }
+        ui-toggle[left] {  z-index: 9; }
+        
+        issue-list
+        {
+            margin-top: 1em;
+            overflow-y: auto;
+        }
+
+        #views 
+        {
+            position: relative; 
+            flex-grow: 2; 
+        }
+                
+        #views > ui-selection-list  
+        {
+            position: absolute;
+            top: 0.4em;
+            right: 0.4em; 
+        }
+        
+        #views > ui-selection-list > button   
+        {
+            font-size: 1.5em	
+        }
+        
+        ui-toggle[right]
+        {
+            position: relative;	
+            display: flex;
+            flex-direction: column;
+            justify-content: stretch;
+            padding: 0 10px 10px 10px; 
+            transition: margin 400ms;
+            flex-basis: 430px;
+            min-width: 430px;
+            border-left: solid 1px var(--border); 
+        }
+        ui-toggle[right][open] { margin-right: 0px; }
+        ui-toggle[right][close] { margin-right: -450px; }
+        ui-toggle[right] { z-index: 9; }
+    
+        #images 
+        { 
+            height: 100%;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+    
+        .preview
+        {
+            margin-bottom: 5px;
+        }
+        
+        .preview img
+        {
+            display: block; 
+            width: 200px;
+        }
+
+        .preview[active] img
+        { 
+            border: 3px solid var(--primary);
+            box-sizing: border-box;
+        }
+       
+        #inspect 
+        {
+            background-color: var(--hover);
+            border: 1px solid grey;
+            border-radius: 0.5em;
+            line-height: 4em;
+            text-align: center;		
+        }
+        
+        #inspect[status='1'] { background-color: var(--resolved); }				
+        #inspect[status='2'] { background-color: var(--info); }
+        #inspect[status='3'] { background-color: var(--warn); }
+        #inspect[status='4'] { background-color: var(--severe); }				
+        
+        #inspect span 
+        {
+            font-size:1.3em;
+            vertical-align: middle;			
+        }
+        
+        #inspect i 
+        {
+            float: right;
+            margin: 0.2em;
+        }
+
+        
+    </style>
+        
+</head>
+
+<body>
+
+    <template>
+        <div class="preview">
+            <img src=""></img>
+        </div>
+    </template>
+
+    <vx-header></vx-header>
+    
+    <main>
+        <ui-toggle left open>
+            <button id="create" disabled class="vx-primary">Create Issue</button>
+            <issue-list></issue-list>
+            <div id="inspect" hidden>
+                <span>Click to Complete</span>
+                <i class="far fa-3x fa-square"></i>
+            </div>
+        </ui-toggle>
+        
+        <div id="views">
+            <ui-stack top="3D">
+                <view-3d name="3D" token="{{{dataset}}}" active></view-3d>
+                <view-2d name="2D" token="{{{dataset}}}"></view-2d>
+            </ui-stack>
+            <ui-selection-list single required>
+                <button name="2D" class="vx-secondary" disabled>
+                    <span>2D</span>
+                </button>
+                <button name="3D" class="vx-secondary" active>
+                    <span>3D</span>
+                </button>
+            </ui-selection-list>
+        </div>
+        
+        <ui-toggle right open>
+            <ui-selection-list id="images" single></ui-selection-list>
+        </ui-toggle>
+        
+    </main>
+    
+    <ui-modal id="issue-dialog" hidden close>
+        <issue-form></issue-form>
+    </ui-modal>
+    
+    <ui-modal id="inventory-dialog" hidden close>
+        <vx-inventory key="{{{key}}}" type="cloud" tags="_pix4d" meta="status,description"></vx-inventory>
+    </ui-modal>
+    
+    <ui-modal id="inspect-dialog" hidden close>
+        <p>Reversing the inspection will delete all issues associated with this dataset. <br>
+        Continue ... ? <p>
+        <button name="yes" class="vx-secondary">Yes</button><button name="no">No</button>	
+    </ui-modal>
+    
+</body>
+
+
+</html>
