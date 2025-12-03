@@ -240,7 +240,7 @@ module.exports = (gce) =>
                     disks: [ {
                             initializeParams: {
                                 diskSizeGb: '50',
-                                sourceSnapshot: "https://compute.googleapis.com/compute/v1/projects/voxxlr/global/snapshots/vx-processor-new",
+                                sourceSnapshot: "https://compute.googleapis.com/compute/v1/projects/voxxlr/global/snapshots/vx-processor",
                             },
                             autoDelete: true,
                             boot: true,
