@@ -3,6 +3,7 @@
     "app": "file:app/server",
     "doc": "file:doc/server",
     "gec": "file:_platform/gce",
+    "lit": "^3.3.1",
     "www": "file:www/server"
   },
   "scripts": {
@@ -10,6 +11,12 @@
     "start": "npm start --prefix doc/server & npm start --prefix app/server & npm start --prefix www/server &",
     "app": "npm start --prefix app/server",
     "doc": "npm start --prefix doc/server",
-    "www": "npm start --prefix www/server"
+    "www": "npm start --prefix www/server",
+    "css:www": "tailwindcss -i www/client/styles.css -o www/client/styles-built.css --content 'www/client/**/*.{html,js}'",
+    "css:www:watch": "tailwindcss -i www/client/styles.css -o www/client/styles-built.css --content 'www/client/**/*.{html,js}' --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.17",
+    "tailwindcss": "^4.1.17"
   }
 }

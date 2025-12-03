@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+/* Custom design tokens matching existing CSS variables */
+@theme {
+  /* Primary colors */
+  --color-primary: #0075FF;
+  --color-primary-transparent: #0075FF33;
+  --color-important: #FF7500;
+  --color-important-transparent: #FF750033;
+  --color-active: #00aa00;
+  --color-active-transparent: #00aa0033;
+  
+  /* UI colors */
+  --color-selected: #D9D9D9;
+  --color-border: #cccccc;
+  --color-border-transparent: #cccccc33;
+  --color-hover: #EAEAEA;
+  --color-disabled: #cccccc;
+  --color-panel-header: #EAEAEA;
+  
+  /* Status colors */
+  --color-info: #0075FF;
+  --color-warn: #ffcc00;
+  --color-severe: #cc3300;
+  --color-resolved: #339900;
+
+  /* Brand colors */
+  --color-brand-primary: rgb(63, 81, 181);
+  --color-brand-bg: #F8F8FE;
+  --color-brand-section: #DBDBF9;
+
+  /* Social media colors */
+  --color-twitter: #55ACEE;
+  --color-youtube: #bb0000;
+  --color-blogger: #FE6602;
+
+  /* Fonts */
+  --font-sans: 'Nunito Sans', sans-serif;
+}
+
+/* Base layer overrides */
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-brand-primary);
+    margin: 0;
+    font-size: 1em;
+    user-select: none;
+  }
+}
+
+/* Component layer for reusable patterns */
+@layer components {
+  .btn {
+    @apply inline-block px-6 py-2 text-white bg-brand-primary border border-white rounded-full opacity-90 no-underline transition-all duration-150;
+  }
+  
+  .btn:hover {
+    @apply opacity-100;
+  }
+  
+  .btn:active {
+    @apply scale-98;
+  }
+
+  .card {
+    @apply border-4 border-border shadow-lg transition-all duration-200;
+  }
+  
+  .card:hover {
+    @apply border-brand-primary;
+  }
+
+  .icon-btn {
+    @apply p-4 text-center no-underline text-white;
+  }
+}
+
+/* Utility extensions */
+@layer utilities {
+  .scale-98 {
+    transform: scale(0.98);
+  }
+}

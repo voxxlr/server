@@ -61,7 +61,7 @@
 
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    <link rel="stylesheet" href="styles-built.css">
 
     <script>
         window.doc_domain = "{{{doc_domain}}}";
@@ -69,10 +69,8 @@
         window.www_domain = "{{{www_domain}}}";
     </script>
 
-    <script src="{{{app_domain}}}/ui.js"></script>
-    <script src="va-login.js"></script>
-
-    <link rel="stylesheet" href="index.css">
+    <script type="module" src="components/vx-modal.js"></script>
+    <script type="module" src="components/va-login.js"></script>
 
     <style>
 
@@ -89,7 +87,7 @@
         {
             document.addEventListener("contextmenu", (e) => { e.preventDefault(); }, false);
 
-            document.querySelectorAll("#section2 .image-btn").forEach(function(item)
+            document.querySelectorAll("#section2 .card").forEach(function(item)
             {
                 item.addEventListener("click", function(event)
                 {
@@ -156,48 +154,53 @@
     </script>
 
 </head>
-<body>
+<body class="text-brand-primary overflow-hidden">
 
-    <header>
-        <div class="logo"><img alt="Voxxlr.com" src="{{{www_domain}}}/images/logo.svg" /><span>Voxxlr</span></div>
-        <div id="btn-login">Login</div>
-        <!-- <a href="javascript:;" class="button request">Request a Demo</a> -->
+    <header class="absolute left-0 top-0 right-0 h-16 flex flex-row justify-end items-center pr-8 bg-brand-bg z-50">
+        <div class="logo ml-6 flex items-center mr-auto cursor-pointer">
+            <img alt="Voxxlr.com" src="{{{www_domain}}}/images/logo.svg" class="w-8" />
+            <span class="text-xl ml-4 font-bold uppercase">Voxxlr</span>
+        </div>
+        <div id="btn-login" class="ml-16 cursor-pointer">Login</div>
+        <!-- <a href="javascript:;" class="btn">Request a Demo</a> -->
     </header>
 
-    <main id="main-page">
-        <section id="section1">
-            <div>
-                <h1>A Cloud Platform for Geospatial Content</h1>
-                <p>Voxxlr provides web based visualization and analysis tools for geospatial data. Simply upload your data and choose from a growing number of Apps.</p>
-                <div class="sample"><a href="{{{app_domain}}}/1717680009519" target="_blank" class="button">Explore Sample Data...</a></div>
+    <main id="main-page" class="absolute top-16 left-0 bottom-0 right-0 flex flex-col overflow-auto [&[hidden]]:hidden">
+        <section id="section1" class="flex w-full box-border flex-1 min-h-[50vh] [&[hidden]]:hidden">
+            <div class="basis-[40%] max-w-[30em] self-start overflow-visible z-10 m-12">
+                <h1 class="leading-relaxed text-3xl whitespace-nowrap mb-8">A Cloud Platform for Geospatial Content</h1>
+                <p class="text-lg leading-relaxed text-black/65">Voxxlr provides web based visualization and analysis tools for geospatial data. Simply upload your data and choose from a growing number of Apps.</p>
+                <div class="flex justify-center mt-16">
+                    <a href="{{{app_domain}}}/1717680009519" target="_blank" class="btn">Explore Sample Data...</a>
+                </div>
             </div>
-            <div>
+            <div class="flex-1" style="background: url('https://www.voxxlr.com/images/main.webp') center / cover;">
             </div>
         </section>
-        <section id="section3">
-            <div>
-                <div class="grid-item text">
-                    <h2>One Platform For Multiple Data Types</h2>
-                    <p>
+        <section id="section3" class="flex flex-col w-full box-border pt-12 pb-12 bg-brand-section [&[hidden]]:hidden">
+            <div class="basis-1/2 flex justify-around">
+                <div class="max-w-[30em]">
+                    <h2 class="text-2xl leading-relaxed mt-8">One Platform For Multiple Data Types</h2>
+                    <p class="text-lg leading-relaxed text-black/65">
                         Upload laser scans, drone maps, 360 images, CAD models and drawings. Voxxlr processes your data within minutes
                         to become accessible via a standard browser. There is no need for dedicated hardware or software. All data and tools
-                        are easily accessible online. <a class="more" target="types">More...</a>
+                        are easily accessible online. <a class="font-bold text-brand-primary hover:text-primary cursor-pointer" target="types">More...</a>
                     </p>
-                    <ul>
+                    <ul class="text-base ml-12 mt-8 list-none">
                         <li>Point Clouds</li>
                         <li>Triangle Meshes</li>
                         <li>Digital Elevation Models</li>
                         <li>Panoramic Images</li>
                     </ul>
                 </div>
-                <div class="grid-item text">
-                    <h2>The Right App For The Task</h2>
-                    <p>
+                <div class="max-w-[30em] ml-16">
+                    <h2 class="text-2xl leading-relaxed mt-8">The Right App For The Task</h2>
+                    <p class="text-lg leading-relaxed text-black/65">
                         Take measurements, create annotations, compare data sets and incorporate external documents and web services. A growing number of
                         Apps provide a diverse toolbox to utilize your data.
-                        <a class="more" target="tools">More...</a>
+                        <a class="font-bold text-brand-primary hover:text-primary cursor-pointer" target="tools">More...</a>
                     </p>
-                    <ul>
+                    <ul class="text-base ml-12 mt-8 list-none">
                         <li>Volume Measurement</li>
                         <li>Elevation Profiles</li>
                         <li>Timeline Comparisons</li>
@@ -206,74 +209,74 @@
                 </div>
             </div>
         </section>
-        <section id="section2">
-            <div class="image-btn card" data-href="{{{demo1_url}}}">
-                <div id="btn-demo1"><i class="fas fa-hand-pointer"><em>&nbsp;click to open</em></i></div>
-                <h4>The Inspector App</h4>
-                <p>Perform inspections of photogrammetry dataset collected by drones.</p>
+        <section id="section2" class="flex w-full box-border justify-around items-stretch p-12 [&[hidden]]:hidden">
+            <div class="card flex-1 cursor-pointer" data-href="{{{demo1_url}}}">
+                <div id="btn-demo1" class="flex items-center justify-center p-4 max-h-[280px]"><i class="fas fa-hand-pointer text-brand-primary"><em class="ml-2">&nbsp;click to open</em></i></div>
+                <h4 class="mx-4 my-6">The Inspector App</h4>
+                <p class="mx-4 my-4 text-lg leading-relaxed text-black/65">Perform inspections of photogrammetry dataset collected by drones.</p>
             </div>
-            <div class="image-btn card" data-href="{{{demo3_url}}}">
-                <div id="btn-demo3"><i class="fas fa-hand-pointer"><em></em></i></div>
-                <h4>The CAD Viewer App</h4>
-                <p>Explore, dissect and analyze 3D CAD and BIM models</p>
+            <div class="card flex-1 cursor-pointer ml-4" data-href="{{{demo3_url}}}">
+                <div id="btn-demo3" class="flex items-center justify-center p-4 max-h-[280px]"><i class="fas fa-hand-pointer text-brand-primary"><em></em></i></div>
+                <h4 class="mx-4 my-6">The CAD Viewer App</h4>
+                <p class="mx-4 my-4 text-lg leading-relaxed text-black/65">Explore, dissect and analyze 3D CAD and BIM models</p>
             </div>
-            <div class="image-btn card" data-href="{{{demo4_url}}}">
-                <div id="btn-demo4"><i class="fas fa-hand-pointer"><em></em></i></div>
-                <h4>The Volumetrics App</h4>
-                <p>Take aggregate measurements, display elevation profiles and compare changes over time</p>
+            <div class="card flex-1 cursor-pointer ml-4" data-href="{{{demo4_url}}}">
+                <div id="btn-demo4" class="flex items-center justify-center p-4 max-h-[280px]"><i class="fas fa-hand-pointer text-brand-primary"><em></em></i></div>
+                <h4 class="mx-4 my-6">The Volumetrics App</h4>
+                <p class="mx-4 my-4 text-lg leading-relaxed text-black/65">Take aggregate measurements, display elevation profiles and compare changes over time</p>
             </div>
         </section>
-        <section id="section35">
-            <div>
-                <div class="grid-item text">
-                    <h2>Develop Custom Solutions</h2>
+        <section id="section35" class="flex flex-col w-full box-border pt-12 pb-12 bg-brand-section [&[hidden]]:hidden">
+            <div class="basis-1/2 flex justify-around">
+                <div class="max-w-[30em] min-w-[30em]">
+                    <h2 class="text-2xl leading-relaxed mt-8">Develop Custom Solutions</h2>
                     <div>
-                        <p>
+                        <p class="text-lg leading-relaxed text-black/65">
                             A mature programming API and component library lets you seamlessly integrate Voxxlr
                             with existing IT infrastructure and develop custom solutions. Let us know if there is an App you need.
-                            <a class="more" target="api">More...</a>
+                            <a class="font-bold text-brand-primary hover:text-primary cursor-pointer" target="api">More...</a>
                         </p>
                     </div>
                 </div>
-                <div class="grid-item text" style="display:flex; justify-content: center; align-items:center;">
+                <div class="max-w-[30em] min-w-[30em] ml-16 flex justify-center items-center">
                     <!--
                     <div>
-                        <a href="javascript:;" class="button request">Contact ..</a>
+                        <a href="javascript:;" class="btn">Contact ..</a>
                     </div>
                      -->
                 </div>
             </div>
         </section>
 
-        <footer>
-            <div class="section">
-                <img alt="Voxxlr.com" src="{{{www_domain}}}/images/logo.svg" />
+        <footer class="min-h-40 w-full overflow-hidden bg-brand-primary text-white flex flex-row justify-around items-center p-4 box-border">
+            <div class="flex flex-row items-center">
+                <img alt="Voxxlr.com" src="{{{www_domain}}}/images/logo.svg" class="block h-16 w-auto mr-4" />
                 <div>
-                    <span class="email">
+                    <span class="text-3xl">
                         info@voxxlr.com
                     </span><br />
-                    <span class="copyright">
+                    <span class="text-xs leading-loose">
                         &copy; Geist Software Labs. All rights reserved.
                     </span>
                 </div>
             </div>
-            <div class="section">
+            <div>
             </div>
-            <div class="section">
-                <a href="https://www.youtube.com/channel/UCy59IOT7kMzO4cjO_RYeCuw" target="_blank" class="icon icon-youtube-squared"><i class="fab fa-2x fa-youtube-square"></i></a>
-                <a href="https://twitter.com/voxxlr_" target="_blank" class="icon icon-twitter-bird"><i class="fab fa-2x fa-twitter"></i></a>
-                <a href="https://voxxlr.blogspot.com/" target="_blank" class="icon icon-blogger-rect"><i class="fab fa-2x fa-blogger"></i></a>
+            <div>
+                <a href="https://www.youtube.com/channel/UCy59IOT7kMzO4cjO_RYeCuw" target="_blank" class="icon-btn bg-youtube inline-block"><i class="fab fa-2x fa-youtube-square"></i></a>
+                <a href="https://twitter.com/voxxlr_" target="_blank" class="icon-btn bg-twitter inline-block"><i class="fab fa-2x fa-twitter"></i></a>
+                <a href="https://voxxlr.blogspot.com/" target="_blank" class="icon-btn bg-blogger inline-block"><i class="fab fa-2x fa-blogger"></i></a>
             </div>
         </footer>
 
     </main>
 
-    <ui-modal id="login-dialog" hidden close>
+    <vx-modal id="login-dialog" hidden close>
         <va-login oauth2='{{{oauth2}}}'></va-login>
-    </ui-modal>
-    <ui-modal id="viewer-dialog" hidden close>
-        <iframe id="viewer"></iframe>
-    </ui-modal>
+    </vx-modal>
+    <vx-modal id="viewer-dialog" hidden close>
+        <iframe id="viewer" class="h-[calc(100vh-9rem)] w-[calc(100vw-9rem)] border-none z-50"></iframe>
+    </vx-modal>
 </body>
 
 <link rel="dns-prefetch" href="https://{{{app_domain}}}">
