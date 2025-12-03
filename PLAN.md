@@ -14,65 +14,44 @@ This project consists of three subdomains:
 - Docker + Nginx for deployment
 
 ### Target Stack
-- **Vite** (build tooling + dev server)
 - **Tailwind CSS** (styling)
 - **Lit** (Web Components)
-- **Alpine.js** (lightweight interactivity)
-- **Static Hosting** (Cloud Storage/CDN for HTML/JS/CSS)
-- **Cloud Functions** (API routes only)
+- **Google Cloud Functions** (full app deployment)
 
 ### Architecture Change
 
-**Before (Server-Side Rendering):**
+**Before (Docker + Nginx):**
 ```
-Browser → Express + Mustache → Dynamic HTML with {{{variables}}}
-```
-
-**After (Static + API):**
-```
-Browser → Static Files (CDN) → Vite-built HTML/JS/CSS
-              ↓
-         Cloud Functions → API routes only (/api/*)
+Browser → Nginx → Docker Container → Express + Mustache
 ```
 
-**Configuration Strategy:**
-| Config Type | Approach |
-|-------------|----------|
-| Domains (app_domain, etc.) | Build-time env vars via Vite |
-| OAuth config | Runtime API call to `/api/config` |
-| Demo URLs | Build-time or config API |
-| User tokens | Runtime auth flow (unchanged) |
+**After (Cloud Functions):**
+```
+Browser → Cloud Functions → Express routes serving static files + API
+```
 
-**Local Development:**
-```
-Vite Dev Server (port 5173) → Hot reload, env vars from .env
-         ↓
-    Proxy to Cloud Functions emulator or mock API
-```
+**Benefits:**
+- Serverless scaling
+- No container management
+- Pay-per-use pricing
+- Simplified deployment
 
 ---
 
-## Phase 1: Vite + Tailwind CSS Setup
+## Phase 1: Tailwind CSS Setup
 
 ### Scope
 | File | Lines | Description |
 |------|-------|-------------|
-| `www/client/index.css` | ~200 | Landing page styles |
+| `www/client/styles.css` | ~200 | Landing page styles |
 | `app/client/ui.css` | ~130 | Core UI variables & button styles |
 | Component inline styles | ~2000+ | Styles embedded in 30+ web components |
 
 ### Tasks
 
-#### 1.1 Setup Tailwind CSS with Vite
-```
-/workspaces/server/
-├── vite.config.js          # Shared Vite config
-├── tailwind.config.js      # Tailwind configuration
-├── postcss.config.js       # PostCSS with Tailwind
-└── src/
-    └── styles/
-        └── globals.css     # Tailwind base + custom utilities
-```
+#### 1.1 Setup Tailwind CSS
+- Use Tailwind CLI for building CSS
+- No complex build tooling required
 
 #### 1.2 Create Tailwind Design Tokens
 Map existing CSS variables to Tailwind config:
@@ -197,76 +176,37 @@ class VxHeader extends LitElement {
 
 ---
 
-## Phase 3: Alpine.js Integration
+## Phase 3: Cloud Functions Deployment
 
-### Use Cases
-- Simple interactive elements that don't need full components
-- Form handling in landing page
-- Toggle states, dropdowns, modals
-- Progressive enhancement
+### Deployment Strategy
+Each subdomain becomes a Cloud Function:
+- `www-voxxlr` - Marketing/landing page
+- `app-voxxlr` - Application launchpad
+- `doc-voxxlr` - Document viewer/API
 
-### Examples
-```html
-<!-- Login dropdown -->
-<div x-data="{ open: false }">
-    <button @click="open = !open">Login</button>
-    <div x-show="open" x-cloak>...</div>
-</div>
+### Migration Steps
+1. Adapt Express servers for Cloud Functions entry point
+2. Configure `_platform/gce` abstractions for serverless
+3. Set up Cloud Function triggers and routing
+4. Configure domain mapping
+
+### Local Development
 ```
-
----
-
-## Phase 4: Vite Build System
-
-### New Project Structure
+Express server (existing) → Test locally as before
+Functions Framework → Test Cloud Functions locally
 ```
-/workspaces/server/
-├── vite.config.js
-├── package.json              # Workspace root
-├── tailwind.config.js
-├── postcss.config.js
-├── src/
-│   ├── components/           # Shared Lit components
-│   │   ├── vx-header.ts
-│   │   ├── vx-viewer.ts
-│   │   └── ...
-│   ├── styles/
-│   │   └── globals.css
-│   └── lib/                  # Shared utilities
-├── www/
-│   ├── index.html
-│   ├── login.html
-│   └── vite.config.js        # Extends root
-├── app/
-│   ├── index.html
-│   ├── launchpad.html
-│   └── vite.config.js
-└── doc/
-    ├── index.html
-    └── vite.config.js
-```
-
----
-
-## Phase 5: Cloud Functions (Future)
-
-Replace Express servers with:
-- **Google Cloud Functions** or **Cloud Run**
-- Keep the `_platform/gce` abstractions
-- Use serverless-compatible routing
 
 ---
 
 ## Execution Timeline
 
 ### Step 1: Setup (Day 1)
-- [ ] Initialize Vite at project root
-- [ ] Configure Tailwind CSS
-- [ ] Create shared `globals.css` with design tokens
-- [ ] Test build pipeline
+- [ ] Configure Tailwind CSS (CLI-based)
+- [ ] Create shared design tokens
+- [ ] Test CSS build pipeline
 
 ### Step 2: www Subdomain (Days 2-3)
-- [ ] Convert `index.css` → Tailwind classes
+- [ ] Convert `styles.css` → Tailwind classes
 - [ ] Convert `va-login.js` → Lit component
 - [ ] Update HTML files
 - [ ] Test login flow
@@ -286,7 +226,13 @@ Replace Express servers with:
 - [ ] Convert overlay components
 - [ ] Test API docs
 
-### Step 6: Integration & Testing (Days 16-18)
+### Step 6: Cloud Functions Deployment (Days 16-18)
+- [ ] Adapt Express servers for Cloud Functions
+- [ ] Test with Functions Framework locally
+- [ ] Deploy to GCP
+- [ ] Configure domain routing
+
+### Step 7: Integration & Testing (Days 19-20)
 - [ ] Full integration testing
 - [ ] Performance optimization
 - [ ] Documentation update
@@ -316,16 +262,8 @@ Replace Express servers with:
 - [ ] app editor components migrated
 - [ ] doc components migrated
 
-### Phase 3: Alpine.js
-- [ ] Identified use cases
-- [ ] Implemented where needed
-
-### Phase 4: Vite
-- [ ] Build system working
-- [ ] All subdomains building
-- [ ] Production builds optimized
-
-### Phase 5: Cloud Functions
-- [ ] API routes migrated
-- [ ] Authentication working
-- [ ] Deployment configured
+### Phase 3: Cloud Functions
+- [ ] Express servers adapted
+- [ ] Local testing complete
+- [ ] Deployed to GCP
+- [ ] Domain routing configured

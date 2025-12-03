@@ -32,7 +32,7 @@ app.use(function (err, req, res, next) {
     res.status(500).send(err.message)
 })
 
-app.listen(3021,  "0.0.0.0", async () =>
+app.listen(3021,  "localhost", async () =>
 {
-    console.log(`---- doc server running at http://0.0.0.0:3021/... --- `);
+    console.log(`---- doc server running at http://localhost:3021/... --- `);
 });

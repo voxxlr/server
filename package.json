@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "app": "file:app/server",
+    "daisyui": "^5.5.7",
     "doc": "file:doc/server",
     "gec": "file:_platform/gce",
     "lit": "^3.3.1",

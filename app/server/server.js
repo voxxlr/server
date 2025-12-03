@@ -161,7 +161,7 @@ app.use(function (err, req, res, next) {
     res.status(500).send(err.message)
 })
 
-app.listen(3022, "0.0.0.0", async () =>
+app.listen(3022, "localhost", async () =>
 {
-    console.log(`---- app server running at http://0.0.0.0:3022/... --- `);
+    console.log(`---- app server running at http://localhost:3022/... --- `);
 });

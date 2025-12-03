@@ -1,6 +1,6 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
-/* Custom design tokens matching existing CSS variables */
 @theme {
   /* Primary colors */
   --color-primary: #0075FF;
@@ -46,39 +46,5 @@
     margin: 0;
     font-size: 1em;
     user-select: none;
-  }
-}
-
-/* Component layer for reusable patterns */
-@layer components {
-  .btn {
-    @apply inline-block px-6 py-2 text-white bg-brand-primary border border-white rounded-full opacity-90 no-underline transition-all duration-150;
-  }
-  
-  .btn:hover {
-    @apply opacity-100;
-  }
-  
-  .btn:active {
-    @apply scale-98;
-  }
-
-  .card {
-    @apply border-4 border-border shadow-lg transition-all duration-200;
-  }
-  
-  .card:hover {
-    @apply border-brand-primary;
-  }
-
-  .icon-btn {
-    @apply p-4 text-center no-underline text-white;
-  }
-}
-
-/* Utility extensions */
-@layer utilities {
-  .scale-98 {
-    transform: scale(0.98);
   }
 }

@@ -38,7 +38,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/www/server/server.js",
+            "program": "${workspaceFolder}/www/server.js",
             "outputCapture": "std"
         }
     ]

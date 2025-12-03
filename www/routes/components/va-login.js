@@ -1,10 +1,5 @@
 import { LitElement, html } from 'https://cdn.jsdelivr.net/npm/lit@3/+esm';
 
-/**
- * A login component built with Lit and Tailwind
- * @fires login - Fired when user successfully logs in, with token as detail
- * @fires logout - Fired when user logs out
- */
 export class VaLogin extends LitElement {
   static properties = {
     oauth2: { type: String },
@@ -86,6 +81,10 @@ export class VaLogin extends LitElement {
     this.dispatchEvent(new CustomEvent('logout', { bubbles: true }));
   }
 
+  logout() {
+    this._logout();
+  }
+
   _login(token) {
     window.sessionStorage.setItem('voxxlr', token);
     this.dispatchEvent(new CustomEvent('login', { bubbles: true, detail: token }));
@@ -99,34 +98,32 @@ export class VaLogin extends LitElement {
     return html`
       <link rel="stylesheet" href="/styles-built.css">
       
-      <div class="flex flex-col items-stretch w-80 font-sans text-brand-primary">
-        <div class="mb-4">
-          <p class="text-base leading-relaxed text-black/65 m-0">
-            A free trial account is automatically created for you when you first log in.
-          </p>
-        </div>
+      <div class="w-80">
+        <p class="text-base-content/65 mb-4">
+          A free trial account is automatically created for you when you first log in.
+        </p>
         
-        <div class="flex flex-col items-stretch">
+        <div class="flex flex-col gap-2">
           ${Object.entries(this.platforms).map(([id, platform]) => html`
             <button 
               id=${id}
-              class="h-9 mb-2 border border-border rounded cursor-pointer font-inherit text-base transition-all hover:opacity-90 active:scale-[0.98]"
+              class="btn btn-outline"
               style=${platform.style || ''}
               @click=${() => this._handleButtonClick(id)}
             >${platform.textContent}</button>
           `)}
         </div>
         
-        <div id="join" class="hidden">
-          <p class="text-base leading-relaxed text-black/65 m-0">
+        <div id="join" class="hidden mt-4">
+          <p class="text-base-content/65 mb-2">
             You can also join an existing account by entering the account email address below.
           </p>
           <input 
-            class="w-full box-border p-2 my-2 border border-primary font-inherit text-base focus:outline-primary" 
+            class="input input-bordered w-full" 
             placeholder="Join Account ..." 
             type="text"
           >
-          <p class="text-base leading-relaxed text-black/65 m-0">
+          <p class="text-base-content/65 mt-2">
             The owner of this account must have invited you in order for you to join.
           </p>
         </div>

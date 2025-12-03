@@ -8,7 +8,7 @@
     <link rel="shortcut icon" href="{{{www_domain}}}/favicon.ico" />
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    <link rel="stylesheet" href="styles-built.css">
 
     <script>
         window.doc_domain = "{{{doc_domain}}}";
@@ -16,58 +16,14 @@
         window.www_domain = "{{{www_domain}}}";
     </script>
 
-    <script src="{{{app_domain}}}/ui.js"></script>
     <script src="{{{app_domain}}}/vx-viewer.js"></script>
     <script src="{{{app_domain}}}/va-links.js"></script>
     <script src="{{{app_domain}}}/va-menu.js"></script>
 
-    <script src="{{{www_domain}}}/va-login.js"></script>
+    <script type="module" src="components/vx-modal.js"></script>
+    <script type="module" src="components/va-login.js"></script>
 
     <style>
-
-        body {
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            user-select: none;
-            margin: 0;
-        }
-
-        header {
-            position: absolute;
-            top: 0px;
-            left: 10px;
-            right: 10px;
-            height: 40px;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            border-bottom: solid 1px var(--border);
-        }
-
-        main {
-            position: absolute;
-            top: 40px;
-            left: 0px;
-            right: 0px;
-            bottom: 0px;
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-        }
-
-            button i {
-                margin-right: 1em;
-            }
-
         va-menu {
             z-index: 1000;
             margin-left: 2em;
@@ -75,38 +31,6 @@
 
         va-settings {
             z-index: 999;
-        }
-
-        #title {
-            text-align: left;
-            align-items: center;
-            font-size: 1.0em;
-            color: var(--primary);
-            display: flex;
-            justify-content: center;
-        }
-
-            #title i {
-                cursor: pointer;
-            }
-
-            #title span {
-                margin-left: 1em;
-                font-weight: bold;
-            }
-
-        #status {
-            flex: 1;
-            text-align: center;
-            color: var(--primary);
-            font-style: italic;
-        }
-
-        #links-dialog > div {
-            position: relative;
-            display: flex;
-            height: 80vh;
-            overflow: hidden;
         }
 
         va-link-list {
@@ -262,34 +186,42 @@
     </script>
 
 </head>
-<body>
-    <header>
-        <div id="title"><i class="fas fa-rocket"></i><span id="page">Launchpad</span></div>
-        <div id="status"></div>
+<body class="overflow-hidden h-screen w-screen select-none m-0">
+    <header class="absolute top-0 left-2.5 right-2.5 h-10 flex flex-row items-center border-b border-base-300">
+        <div id="title" class="text-left items-center text-base text-primary flex justify-center">
+            <i class="fas fa-rocket cursor-pointer"></i>
+            <span id="page" class="ml-4 font-bold">Launchpad</span>
+        </div>
+        <div id="status" class="flex-1 text-center text-primary italic"></div>
         <div>
-            <button name="links" class="vx-primary"><i class="fas fa-share-alt"></i><span>Share App</span></button>
+            <button name="links" class="btn btn-soft btn-secondary btn-sm gap-2">
+                <i class="fas fa-share-alt"></i>
+                <span>Share App</span>
+            </button>
         </div>
         <va-menu left></va-menu> 
         <va-settings token="{{{account}}}" left></va-settings>
     </header>     
-    <main>
-        <iframe src=""></iframe>
+    <main class="absolute top-10 left-0 right-0 bottom-0">
+        <iframe src="" class="w-full h-full border-none"></iframe>
     </main>
     
-    <ui-modal id="login-dialog" hidden close>
+    <vx-modal id="login-dialog" hidden close>
         <va-login></va-login>
-    </ui-modal>
+    </vx-modal>
     
-    <ui-modal id="links-dialog" hidden close>
-        <div>
-            <ui-section name="list" label="Active Links">
-                <va-link-list token="{{{account}}}"  app="voxxlr/inventory"></va-link-list>
-            </ui-section>
-            <ui-section name="link" label="Link Configuration" disabled>
-                <va-link  token="{{{account}}}"></va-link>
-            </ui-section>
+    <vx-modal id="links-dialog" hidden close>
+        <div class="relative flex h-[80vh] overflow-hidden">
+            <div class="flex flex-col p-4">
+                <h3 class="font-bold mb-2">Active Links</h3>
+                <va-link-list token="{{{account}}}" app="voxxlr/inventory"></va-link-list>
+            </div>
+            <div class="flex flex-col p-4" id="link-section">
+                <h3 class="font-bold mb-2">Link Configuration</h3>
+                <va-link token="{{{account}}}"></va-link>
+            </div>
         </div>
-    </ui-modal>
+    </vx-modal>
 
 </body>
 
