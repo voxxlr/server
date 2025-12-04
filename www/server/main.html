@@ -8,20 +8,21 @@
     <link rel="shortcut icon" href="{{{www_domain}}}/favicon.ico" />
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="styles-built.css">
+    <link rel="stylesheet" href="{{{cdn_domain}}}/styles-built.css">
 
     <script>
         window.doc_domain = "{{{doc_domain}}}";
         window.app_domain = "{{{app_domain}}}";
         window.www_domain = "{{{www_domain}}}";
+        window.cdn_domain = "{{{cdn_domain}}}";
     </script>
 
     <script src="{{{app_domain}}}/vx-viewer.js"></script>
     <script src="{{{app_domain}}}/va-links.js"></script>
     <script src="{{{app_domain}}}/va-menu.js"></script>
 
-    <script type="module" src="components/vx-modal.js"></script>
-    <script type="module" src="components/va-login.js"></script>
+    <script type="module" src="{{{cdn_domain}}}/components/vx-modal.js"></script>
+    <script type="module" src="{{{cdn_domain}}}/components/va-login.js"></script>
 
     <style>
         va-menu {

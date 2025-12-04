@@ -9,7 +9,6 @@ module.exports = (ACCOUNT, META, KEY, LINK, DATA) =>
 {
     const router = express.Router()
 
-
     router.get(['/', '/index.html'], async (req, res, next) =>
     {
         //let params = Object.assign({}, req.app.locals.domains);
@@ -19,6 +18,7 @@ module.exports = (ACCOUNT, META, KEY, LINK, DATA) =>
             doc_domain: process.env.doc_domain,
             app_domain: process.env.app_domain,
             www_domain: process.env.www_domain,
+            cdn_domain: process.env.cdn_domain,
         }
         
         // editor
@@ -103,6 +103,7 @@ module.exports = (ACCOUNT, META, KEY, LINK, DATA) =>
                 doc_domain: process.env.doc_domain,
                 app_domain: process.env.app_domain,
                 www_domain: process.env.www_domain,
+                cdn_domain: process.env.cdn_domain,
             }
             params.account = req.query.account;
             params.key = await KEY.default(account.i);
@@ -121,6 +122,7 @@ module.exports = (ACCOUNT, META, KEY, LINK, DATA) =>
             doc_domain: process.env.doc_domain,
             app_domain: process.env.app_domain,
             www_domain: process.env.www_domain,
+            cdn_domain: process.env.cdn_domain,
         }
         params["oauth2"] = process.env.login;
         switch (req.query.target)

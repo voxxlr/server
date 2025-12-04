@@ -34,7 +34,7 @@ export class VxModal extends LitElement {
     }
 
     return html`
-      <link rel="stylesheet" href="/styles-built.css">
+      <link rel="stylesheet" href="${window.cdn_domain}/styles-built.css">
       
       <div class="modal modal-open">
         <div class="modal-box relative max-w-[calc(100vw-9rem)] w-auto" @click=${(e) => e.stopPropagation()}>

@@ -96,7 +96,7 @@ export class VaLogin extends LitElement {
 
   render() {
     return html`
-      <link rel="stylesheet" href="/styles-built.css">
+      <link rel="stylesheet" href="${window.cdn_domain}/styles-built.css">
       
       <div class="w-80">
         <p class="text-base-content/65 mb-4">

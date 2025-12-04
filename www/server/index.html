@@ -61,16 +61,17 @@
 
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="styles-built.css">
+    <link rel="stylesheet" href="{{{cdn_domain}}}/styles-built.css">
 
     <script>
         window.doc_domain = "{{{doc_domain}}}";
         window.app_domain = "{{{app_domain}}}";
         window.www_domain = "{{{www_domain}}}";
+        window.cdn_domain = "{{{cdn_domain}}}";
     </script>
 
-    <script type="module" src="components/vx-modal.js"></script>
-    <script type="module" src="components/va-login.js"></script>
+    <script type="module" src="{{{cdn_domain}}}/components/vx-modal.js"></script>
+    <script type="module" src="{{{cdn_domain}}}/components/va-login.js"></script>
 
     <style>
 
@@ -158,7 +159,7 @@
 
     <header class="absolute left-0 top-0 right-0 h-16 flex flex-row justify-end items-center pr-8 bg-brand-bg z-50">
         <div class="logo ml-6 flex items-center mr-auto cursor-pointer">
-            <img alt="Voxxlr.com" src="{{{www_domain}}}/images/logo.svg" class="w-8" />
+            <img alt="Voxxlr.com" src="{{{cdn_domain}}}/images/logo.svg" class="w-8" />
             <span class="text-xl ml-4 font-bold uppercase">Voxxlr</span>
         </div>
         <button id="btn-login" class="btn btn-ghost ml-16">Login</button>
@@ -258,7 +259,7 @@
 
         <footer class="min-h-40 w-full overflow-hidden bg-brand-primary text-white flex flex-row justify-around items-center p-4 box-border">
             <div class="flex flex-row items-center">
-                <img alt="Voxxlr.com" src="{{{www_domain}}}/images/logo.svg" class="block h-16 w-auto mr-4" />
+                <img alt="Voxxlr.com" src="{{{cdn_domain}}}/images/logo.svg" class="block h-16 w-auto mr-4" />
                 <div>
                     <span class="text-3xl">
                         info@voxxlr.com
