@@ -4,22 +4,18 @@
 
     <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <link rel="stylesheet" href="{{{app_domain}}}/styles-built.css">
 
     <script>
         window.doc_domain = "{{{doc_domain}}}";
         window.app_domain = "{{{app_domain}}}";
     </script>
     
-    <!-- Voxxlr UI components -->    
-    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
-    <script src="{{{app_domain}}}/ui.js"></script>
-    
-    <!-- Voxxlr App components -->    
+    <script type="module" src="{{{app_domain}}}/ui.js"></script>
     <script src="{{{app_domain}}}/vx-viewer.js"></script>
     <script src="{{{app_domain}}}/vx-inventory.js"></script>
     <script src="{{{app_domain}}}/vx-header.js"></script>
  
-    <!-- Procore App components -->    
     <script src="{{{app_domain}}}/voxxlr/inspect/issue.js"></script>
     <script src="{{{app_domain}}}/voxxlr/inspect/2d.js"></script>
     <script src="{{{app_domain}}}/voxxlr/inspect/3d.js"></script>
@@ -33,13 +29,6 @@
             let currentDataset = null;
 
             let viewer3d = document.querySelector("view-3d");
-
-            // TODO deal with viewer3d.getViewer()
-            
-            
-            // 
-            // Header
-            //
             
             let header = document.querySelector("vx-header");
             header.attach(viewer3d.getViewer())
@@ -48,10 +37,6 @@
                 inventory.select(currentDataset);
                 document.getElementById("inventory-dialog").hidden = false;
             });
-            
-            // 
-            // Inventory
-            //
 
             let inventory = document.querySelector("vx-inventory");
             inventory.addEventListener("dataset-load", async event=>
@@ -83,11 +68,6 @@
                     }
                 })
             });
-            
-            
-            //
-            // inspection button
-            //
             
             let issueList = document.querySelector("issue-list");
             
@@ -160,11 +140,6 @@
                 document.getElementById("inspect-dialog").hidden = true;
             });
             
-            
-            //
-            // 3D Viewer
-            //
-            
             viewer3d.addEventListener("viewer.load", async (event) => 
             {
                 let meta = event.detail.meta;
@@ -218,16 +193,6 @@
                             let img = entry.querySelector('img')
                             img.src = files[0].url;
                             images.appendChild(entry);
-                            
-                            /*
-                            photo.point = {
-                                x: image.position[0],
-                                y: image.position[2], 
-                                z: -image.position[1]
-                            }
-                            photo.id = id;
-                            viewer3d.post("point.create", photo, {});
-                            */
                         }
                     })
                 }
@@ -239,10 +204,6 @@
             {
                 document.getElementById("create").disabled = true;
             });
-            
-            //
-            // 2D Viewer
-            //
             
             let viewer2d = document.querySelector("view-2d");
             document.querySelector("#images").addEventListener("down", event=> 
@@ -272,11 +233,6 @@
                 stack.show(`[name="${event.detail.getAttribute("name")}"]`);
             });
             
-                
-                
-            //
-            // Issue  list and create 
-            //
             let component = document.querySelector("issue-form")
             component.addEventListener("issue-created", async (event) =>
             {
@@ -317,7 +273,6 @@
                 
             document.getElementById("create").addEventListener("click", async (event)=>
             {
-                // open create dialog
                 let dialog = document.querySelector("issue-form");
                 
                 let config = {};
@@ -334,16 +289,11 @@
                     dialog.setAttribute("image", await viewer2d.getImage());
                 }
 
-                // pass preview image & id to create dialog
                 dialog.setAttribute("config", JSON.stringify(config));
                 dialog.setAttribute("id", currentDataset.id);
                 dialog.parentNode.hidden = false;
             });
             
-            
-            //
-            // Startup
-            //
             {{#password}}
             document.querySelector("ui-password").addEventListener("verified", async event=>
             {
@@ -373,29 +323,7 @@
     </script>
     
     <style>
-        
-        body 
-        { 
-            overflow: hidden; 
-            height:100vh; 
-            width: 100vw;
-            user-select: none; 
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        main
-        {
-            flex: 2;
-            display: flex;
-            align-items: stretch;
-            overflow: hidden;
-            margin-top: 0.5em;
-        }
-        
-        ui-toggle[left]
-        {
+        ui-toggle[left] {
             position: relative;	
             display: flex;
             flex-direction: column;
@@ -404,38 +332,33 @@
             transition: margin 400ms;
             flex-basis: 400px;
             min-width: 400px;
-            border-right: solid 1px var(--border); 
+            border-right: solid 1px var(--color-border); 
         }
         ui-toggle[left][open] { margin-left: 0px; }
         ui-toggle[left][close] { margin-left: -420px; }
-        ui-toggle[left] {  z-index: 9; }
+        ui-toggle[left] { z-index: 9; }
         
-        issue-list
-        {
+        issue-list {
             margin-top: 1em;
             overflow-y: auto;
         }
 
-        #views 
-        {
+        #views {
             position: relative; 
             flex-grow: 2; 
         }
                 
-        #views > ui-selection-list  
-        {
+        #views > ui-selection-list {
             position: absolute;
             top: 0.4em;
             right: 0.4em; 
         }
         
-        #views > ui-selection-list > button   
-        {
+        #views > ui-selection-list > button {
             font-size: 1.5em	
         }
         
-        ui-toggle[right]
-        {
+        ui-toggle[right] {
             position: relative;	
             display: flex;
             flex-direction: column;
@@ -444,14 +367,13 @@
             transition: margin 400ms;
             flex-basis: 430px;
             min-width: 430px;
-            border-left: solid 1px var(--border); 
+            border-left: solid 1px var(--color-border); 
         }
         ui-toggle[right][open] { margin-right: 0px; }
         ui-toggle[right][close] { margin-right: -450px; }
         ui-toggle[right] { z-index: 9; }
     
-        #images 
-        { 
+        #images { 
             height: 100%;
             flex: 1;
             overflow-y: auto;
@@ -461,55 +383,40 @@
             align-items: flex-start;
         }
     
-        .preview
-        {
-            margin-bottom: 5px;
-        }
-        
-        .preview img
-        {
-            display: block; 
-            width: 200px;
-        }
-
-        .preview[active] img
-        { 
-            border: 3px solid var(--primary);
+        .preview { margin-bottom: 5px; }
+        .preview img { display: block; width: 200px; }
+        .preview[active] img { 
+            border: 3px solid var(--color-primary);
             box-sizing: border-box;
         }
        
-        #inspect 
-        {
-            background-color: var(--hover);
+        #inspect {
+            background-color: var(--color-hover);
             border: 1px solid grey;
             border-radius: 0.5em;
             line-height: 4em;
             text-align: center;		
         }
         
-        #inspect[status='1'] { background-color: var(--resolved); }				
-        #inspect[status='2'] { background-color: var(--info); }
-        #inspect[status='3'] { background-color: var(--warn); }
-        #inspect[status='4'] { background-color: var(--severe); }				
+        #inspect[status='1'] { background-color: var(--color-resolved); }				
+        #inspect[status='2'] { background-color: var(--color-info); }
+        #inspect[status='3'] { background-color: var(--color-warn); }
+        #inspect[status='4'] { background-color: var(--color-severe); }				
         
-        #inspect span 
-        {
-            font-size:1.3em;
+        #inspect span {
+            font-size: 1.3em;
             vertical-align: middle;			
         }
         
-        #inspect i 
-        {
+        #inspect i {
             float: right;
             margin: 0.2em;
         }
-
-        
     </style>
         
 </head>
 
-<body>
+<body class="overflow-hidden h-screen w-screen select-none m-0 flex flex-col">
 
     <template>
         <div class="preview">
@@ -519,7 +426,7 @@
 
     <vx-header></vx-header>
     
-    <main>
+    <main class="flex-2 flex items-stretch overflow-hidden mt-2">
         <ui-toggle left open>
             <button id="create" disabled class="vx-primary">Create Issue</button>
             <issue-list></issue-list>
@@ -565,6 +472,5 @@
     </ui-modal>
     
 </body>
-
 
 </html>

@@ -28,8 +28,8 @@
     </script>
 
     <!-- ui only component -->
-    <link rel="stylesheet" href="{{{app_domain}}}/ui.css" crossorigin="anonymous">
-    <script src="{{{app_domain}}}/ui.js"></script>
+    <link rel="stylesheet" href="{{{app_domain}}}/styles-built.css" crossorigin="anonymous">
+    <script type="module" src="{{{app_domain}}}/ui.js"></script>
     
     <!-- voxxlr component -->
     <script src="{{{app_domain}}}/vx-viewer.js"></script>
@@ -380,7 +380,7 @@
             flex-shrink: 0;
             flex-basis: 450px;
             transition: margin 400ms;
-            border-right: solid 1px var(--border); 
+            border-right: solid 1px var(--color-border); 
         }
         ui-toggle[left][open] { margin-left: 0px; }
         ui-toggle[left][close] { margin-left: -470px; }
@@ -404,9 +404,9 @@
             font-style: italic;
         }
         
-        .mode[measure] .measure { color: var(--active); }
+        .mode[measure] .measure { color: var(--color-active); }
         .mode[measure] .compare { display: none; }
-        .mode[compare] .compare { color: var(--important); }
+        .mode[compare] .compare { color: var(--color-important); }
         .mode[compare] .measure { display: none; }
                         
         ui-selection-list button { width: 5em; }
@@ -431,7 +431,7 @@
             flex-basis: 340px;
             max-width: 340px;
             transition: margin 400ms;
-            border-left: solid 1px var(--border); 
+            border-left: solid 1px var(--color-border); 
         }
         ui-toggle[right][open] { margin-right: 0px; }
         ui-toggle[right][close] { margin-right: -360px; }
@@ -446,7 +446,7 @@
             bottom: 0px;
             transition:all 0.3s ease;
             background-color: white;
-            border: solid 1px var(--border); 
+            border: solid 1px var(--color-border); 
         }
         
         vx-listing ui-checkbox 
@@ -455,7 +455,7 @@
             top: 0.2em;
             right: 0.2em;
             font-size: 2em;
-            background-color: var(--important);
+            background-color: var(--color-important);
         }
 
         vx-listing { height: 100%; }

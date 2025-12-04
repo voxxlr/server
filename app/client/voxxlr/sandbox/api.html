@@ -4,7 +4,7 @@
     <head>
     
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-        <link rel="stylesheet" href="${window.app_domain}/ui.css">
+        <link rel="stylesheet" href="${window.app_domain}/styles-built.css">
         
         <style>
         
@@ -25,12 +25,12 @@
             
             th { 
                 background:#F5F5F5; 
-                border-top:3px solid var(--primary);
+                border-top:3px solid var(--color-primary);
                 font-size: 1.1em;
             }
             
             th > span { 
-                color: var(--primary);
+                color: var(--color-primary);
                 font-style: italic; 
                 font-size: 0.8em;
             }
@@ -62,7 +62,7 @@
                     'viewer overlay overlay overlay overlay overlay'
                     'viewer threed threed threed twod twod';
                 grid-gap: 10px;
-                background-color: var(--border);
+                background-color: var(--color-border);
                 padding: 10px;
             }
             #messages.grid > div 
@@ -319,14 +319,6 @@
         <p>Voxxlr provides mechanisms to import other documents on the platform. This general only applies to similar data types such as Point Clouds and 3D Models and the corresponding messages may have no effect for incompatible data types. Importing a document requires either
         a document token or a complete document object. The <em>vx-viewer</em> provides an import function that accepts either as a parameter. Internally it post <em>import.load</em> message</p>
         <iframe width="100%" height="725" src="//jsfiddle.net/voxxlr/ox70bjvr/embedded/" allowfullscreen="allowfullscreen"  frameborder="0"></iframe>    	
-        
-        <!-- 
-        <h2>Activation Distances<a name="activation"></a></h2>
-        <p></p>
-    
-        <h2>Custom Parameters<a name="custom"></a></h2>
-        <p></p>
-         -->
            
         <h2>Pre-built Components<a name="components"></a></h2>
         <p>
@@ -339,136 +331,4 @@
         <p>Note that the Voxxlr editor itself is an App, and can thus be used as a reference implementation. The complete source code of the editor as well as a number 
         of predefined web components can be found on github. If you have questions or need support in developing Apps please contact info@voxxlr.com</p> 
     </body>			
-            
-        <!-- 
-        <section class="main">
-            <div>
-                <div class="grid-item text">
-                    <h2>Develop custom solutions</h2>
-                    <p>Voxxlr provides a programming interface and App infrastructure to develop custom solutions on top of the platform. 
-                    It allows third parties to customize the viewer, automate processes and integrate the platform with existing workflows and tools.</p>
-                    <h2>Sample Apps</h2>
-                    <p>There are a growing number of open source Apps that illustrate how to use the JavaScript and REST API to develop applications on top of the viewer. 
-                    The code of the Voxxlr editor, for example, is also open source and will soon be available through github including a library of web components that facilities the development of new Apps.</p>
-                    <div class="center">
-                        <a style="text-align: center;">
-                            <img width="50" src="https://voxxlr.github.io/app/voxxlr/sandbox/images/github.webp"><br>
-                            <span>Component Library<br> (coming soon...)</span>
-                        </a>
-                    </div>
-                    
-                    <h2>Developer resources</h2>
-                    <p>The JavaScript and REST API are in the process of being documented and fully tested. There is an interactive sandbox to explore the 
-                    messaging API of the viewer as well as several programming examples on jsfiddle. Contact us if you have any question or if you are 
-                    looking for an extension of the API</p>
-                    <div class="center">
-                        <a href="https://www.voxxlr.com/api.html" target=�_blank� style="text-align: center;">
-                            <img width="50" src="https://voxxlr.github.io/app/voxxlr/sandbox/images/javascript.webp"><br>
-                            <span>Programming API</span>
-                        </a>
-                    </div>
-                </div>
-                    
-            </div>
-            <div>
-                <div class="grid-item image"><img src="/images/7.jpg"/></div>
-                <div class="grid-item image"><img src="/images/2.jpg"></div>
-            </div>	
-        </section>			
-        
-    
-        <p>Messages related to importing content and initialization may require <em>document tokens</em> as arguments, which can be obtained from the app.voxxlr.com REST endpoints, 
-        or by accessing a datasets via the Voxxlr editor and then clicking on the REST API button in the inventory panel on the bottom of the screen.</p>
-        <table id="viewer">
-            <tr>
-                <td>
-                post (name,arguments,custom)
-                </td>
-                <td>
-                posts a single message to the viewer. The function also accepts arrays for each of the arguments in order to pass multiple messages at once.  
-                </td>
-            </tr>
-            <tr>
-                <td>
-                wait (name,arguments,custom)
-                </td>
-                <td>
-                posts a single message to the viewer and returns a promise which resolves when the mirrored message from the viewer is received. This function has to be called
-                with an <em>await</em>.
-                </td>
-            </tr>
-            <tr>
-                <td>
-                on (name,callback,owner)
-                </td>
-                <td>
-                installs an event handler for a message type produced by the viewer. On receipt, the viewer will invoke the callback as 
-                <br>
-                <br>
-                    callback(arguments, custom, name, owner)
-                <br>	
-                <br>
-                The	optional <em>owner</em> argument is only required to identify the callback in the <em>un</em> function documented below. If <em>un</em> is never called the
-                <em>owner</em> parameter is not required.
-                </td>
-            </tr>
-            <tr>
-                <td>
-                un (name,owner)
-                </td>
-                <td>
-                Uninstalls all message handlers for the given name and owner 
-                </td>
-            </tr>
-            <tr>
-                <td>
-                import(document||token, config, meta)
-                </td>
-                <td>
-                Loads an additional document into the viewer. Calling this function equivalent to posting an <em>import.load</em> message with the appropriate arguments. The first parameter to this function can either be a document token or a 
-                complete document object retrieved via the /list or /load REST calls to app.voxxlr.com, respectively. The <em>config</em> parameter is a user defined object containing transformation matrix, and the <em>meta</em> parameter 
-                is an optional array defining which meta data objects to load with the document.
-                </td>
-            </tr>
-            <tr>
-                <td>
-                init(token)
-                </td>
-                <td>
-                Initializes the viewer with a different document. This function is equivalent to changing the source of the iframe. It returns a Promise which resolves when the iframe <em>onload</em> message has been received. This function should be 
-                called with an <em>await</em> 
-                </td>
-            </tr>
-        </table>		
-        -->
-            <!-- 
-            
-
-    <!-- 
-    <main id="api-page" hidden>
-        <nav>
-            <div class="section">
-                <img src="https://voxxlr.github.io/app/voxxlr/sandbox/images/javascript.webp">
-                <span>JavaScript</span>
-            </div>
-            <div class="item selected" data-href="https://www.voxxlr.com/api.html#viewer"><span>Getting Started</span></div>
-            <div class="item" data-href="https://www.voxxlr.com/api.html#explorer"><span>API Sandbox</span></div>
-            <div class="item" data-href="https://www.voxxlr.com/api.html#camera"><span>Camera Controls</span></div>
-            <div class="item" data-href="https://www.voxxlr.com/api.html#viewpoints"><span>Viewpoints</span></div>
-            <div class="item" data-href="https://www.voxxlr.com/api.html#measurements"><span>Measurements</span></div>
-            <div class="item" data-href="https://www.voxxlr.com/api.html#annotations"><span>Annotations</span></div>
-            <div class="item" data-href="https://www.voxxlr.com/api.html#import"><span>Importing Documents</span></div>
-            <div class="item" data-href="https://www.voxxlr.com/api.html#components"><span>Pre-built Components</span></div>
-            <div class="section">
-                <img src="https://voxxlr.github.io/app/voxxlr/sandbox/images/swagger.webp">
-                <span>REST</span>
-            </div>
-            <div id="doc" class="item" data-href="https://doc.voxxlr.com/rest.html?token={{{document}}}"><span>doc.voxxlr.com</span></div>
-            <div class="item" data-href="https://app.voxxlr.com/rest.html?key={{{key}}}"><span>app.voxxlr.com</span></div>
-        </nav>
-        <iframe src="https://www.voxxlr.com/api.html"></iframe>  
-    </main>
-    -->			
-            
-             -->
 </html>

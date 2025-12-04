@@ -1,0 +1,161 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@theme {
+  /* Primary colors */
+  --color-primary: #0075FF;
+  --color-primary-transparent: #0075FF33;
+  --color-important: #FF7500;
+  --color-important-transparent: #FF750033;
+  --color-active: #00aa00;
+  --color-active-transparent: #00aa0033;
+  
+  /* UI colors */
+  --color-selected: #D9D9D9;
+  --color-border: #cccccc;
+  --color-border-transparent: #cccccc33;
+  --color-hover: #EAEAEA;
+  --color-disabled: #cccccc;
+  --color-panel-header: #EAEAEA;
+  
+  /* Status colors */
+  --color-info: #0075FF;
+  --color-warn: #ffcc00;
+  --color-severe: #cc3300;
+  --color-resolved: #339900;
+}
+
+/* Base layer overrides */
+@layer base {
+  /* Backward-compatible aliases for old variable names - must be in base layer to override DaisyUI */
+  :root {
+    --primary: var(--color-primary);
+    --primary-transparent: var(--color-primary-transparent);
+    --important: var(--color-important);
+    --important-transparent: var(--color-important-transparent);
+    --active: var(--color-active);
+    --active-transparent: var(--color-active-transparent);
+    --selected: var(--color-selected);
+    --border: var(--color-border) !important; /* Override DaisyUI's --border: 1px */
+    --border-transparent: var(--color-border-transparent);
+    --hover: var(--color-hover);
+    --disabled: var(--color-disabled);
+    --panel-header: var(--color-panel-header);
+    --info: var(--color-info);
+    --warn: var(--color-warn);
+    --severe: var(--color-severe);
+    --resolved: var(--color-resolved);
+
+    /* App category colors */
+    --color-management-app: #0075FF;
+    --color-presentation-app: #ffcc00;
+    --color-productivity-app: #00cc33;
+    --color-labs-app: #cc3300;
+
+    /* Brand colors */
+    --color-brand-primary: rgb(63, 81, 181);
+    --color-brand-bg: #F8F8FE;
+    --color-brand-section: #DBDBF9;
+
+    /* Fonts */
+    --font-sans: 'Nunito Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 1em;
+    margin: 0;
+    user-select: none;
+  }
+
+  /* Custom element visibility */
+  :host([hidden]) { display: none; }
+  :host([disabled]) {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  ::slotted(*[hidden]) {
+    display: none !important;
+  }
+
+  /* Form elements */
+  input[type=text] { 
+    border: 1px solid var(--color-primary); 
+  }
+  
+  input:focus {
+    outline-color: var(--color-primary);
+  }
+
+  input, textarea, button {
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+
+  input, textarea {
+    font-size: 1em;
+  }
+
+  textarea {
+    outline-offset: -1px;
+    outline: 1px solid var(--color-border);
+  }
+}
+
+/* Component layer for custom button styles */
+@layer components {
+  .vx-btn {
+    @apply text-center align-middle cursor-pointer transition-all duration-150 ease-in-out;
+  }
+
+  .vx-btn:active {
+    @apply scale-[0.98];
+  }
+
+  .vx-btn:disabled {
+    @apply opacity-50;
+  }
+
+  .vx-btn:focus {
+    @apply outline-none;
+  }
+
+  .vx-secondary {
+    @apply mb-0 text-primary border border-border;
+    background-image: linear-gradient(to bottom, #ffffff, #e6e6e6);
+  }
+
+  .vx-secondary[active] {
+    @apply text-active;
+    background-image: linear-gradient(to top, #ffffff, #e6e6e6);
+  }
+
+  .vx-primary {
+    @apply mb-0 bg-primary border border-primary-transparent text-white;
+  }
+
+  .vx-primary[active] {
+    @apply bg-active border-active-transparent text-white;
+  }
+
+  .vx-tool i {
+    @apply block text-center;
+  }
+
+  .vx-tool span {
+    @apply block mt-1.5;
+  }
+
+  .vx-app {
+    @apply rounded;
+  }
+
+  .vx-app span {
+    @apply ml-2;
+  }
+
+  .vx-round {
+    @apply rounded-full w-5 h-5 p-0 box-border;
+  }
+}

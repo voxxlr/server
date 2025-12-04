@@ -3,19 +3,16 @@
 <head>
 
     <title>Inventory</title>
-   <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
-
+    <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{{app_domain}}}/styles-built.css">
     
     <script>
         window.doc_domain = "{{{doc_domain}}}";
         window.app_domain = "{{{app_domain}}}";
     </script>
-        
-    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
      
-    <!-- ui only component -->
-    <script src="{{{app_domain}}}/ui.js"></script>
+    <script type="module" src="{{{app_domain}}}/ui.js"></script>
     <script src="{{{app_domain}}}/vx-viewer.js"></script>
     <script src="{{{app_domain}}}/vx-file.js"></script>
      
@@ -23,36 +20,15 @@
     <script src="{{{app_domain}}}/voxxlr/inventory/va-map.js"></script>
  
     <style>
-    
-        body 
-        { 
-            position: absolute;
-            left: 0;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            user-select: none;
-            margin: 1em;
-            padding: 0;
-            display: flex;
-         }
-        
-        #documents 
-        {
-            width: 30em;
-        }
-
+        #documents { width: 30em; }
         ui-tab-list { flex-grow: 2; }
-        
         va-map { flex: 1; overflow: hidden; }
-
         vx-viewer > div {
             position: absolute;
             bottom: 0.5em;
             right: 0.5em;
             z-index: 999
         }
-
     </style>  
      
     <script>
@@ -115,7 +91,6 @@
                 }
                 else
                 {
-                    //TODO show on map
                 }
             });
 
@@ -153,10 +128,6 @@
                 });
             });
 
-            //
-            // Startup
-            //
-
             let token = decodeURIComponent("{{{dataset}}}");
             
             {{#password}}
@@ -172,7 +143,7 @@
       
 </head>
 
-<body>
+<body class="absolute inset-0 select-none m-4 p-0 flex">
     <ui-section id="documents" label="Documents">
         <va-documents key="{{{key}}}" permission="{{{permission}}}"></va-documents> 
     </ui-section>

@@ -6,97 +6,35 @@
     <link rel="shortcut icon" href="{{{doc_domain}}}/favicon.ico" />
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="/ui.css">
+    <link rel="stylesheet" href="/styles-built.css">
 
     <script>
         window.doc_domain = "{{{doc_domain}}}";
         window.app_domain = "{{{app_domain}}}";
     </script>
 
-    <script src="/ui.js"></script>
+    <script type="module" src="/ui.js"></script>
      
     <style>
-    
-        :root 
-        {
-            --management-app: #0075FF;
-            --presentation-app: #ffcc00;
-            --productivity-app: #00cc33;
-            --labs-app: #cc3300;
-            --background: #F8F8FE;
-        }
-         
-        body 
-        { 
-            height: 100%;
-            user-select: none;
-            display: flex;
-            justify-content: center;
-            background: var(--background);
-        }
-
-        main 
-        { 
-            display: flex;
-            flex-direction: column;
-            background: #F8F8FE;
-            padding-top: 2em;
-        }
+        div.category.management .app { color: var(--color-management-app) }
+        div.category.management .app:hover { border: 2px outset var(--color-management-app); }
+        main[edit] div.category.management .app:hover { border: 2px outset var(--color-primary); }
         
-        .category 
-        { 
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            margin: 1em;
-            padding-bottom: 2em;
-        }
-        .category:last-child { margin-bottom: 20em; }
+        div.category.presentation .app { color: var(--color-presentation-app) }
+        div.category.presentation .app:hover { border: 2px outset var(--color-presentation-app); }
+        main[edit] div.category.presentation .app:hover { border: 2px outset var(--color-primary); }
         
-        .title 
-        {
-            margin-left: 1.5em;
-            color: var(--border) 
-        }
+        div.category.productivity .app { color: var(--color-productivity-app) }
+        div.category.productivity .app:hover { border: 2px outset var(--color-productivity-app); }
+        main[edit] div.category.productivity .app:hover { border: 2px outset var(--color-primary); }
         
-        .app 
-        { 
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            width: 15em;
-            height: 8em;
-            margin: 0.5em; 
-            border: 1px outset var(--border);
-            background: white;
-            box-sizing: border-box;
-        }
-        
-        .app i { margin-top: 0.5em; }
-        
-        div.category.management	.app { color: var(--management-app) }
-        div.category.management	.app:hover { border: 2px outset var(--management-app); }
-        main[edit] div.category.management	.app:hover { border: 2px outset var(--primary); }
-        
-        div.category.presentation .app { color: var(--presentation-app) }
-        div.category.presentation .app:hover { border: 2px outset var(--presentation-app); }
-        main[edit] div.category.presentation .app:hover { border: 2px outset var(--primary); }
-        
-        div.category.productivity .app { color: var(--productivity-app) }
-        div.category.productivity .app:hover { border: 2px outset var(--productivity-app); }
-        main[edit] div.category.productivity .app:hover { border: 2px outset var(--primary); }
-        
-        div.category.labs .app { color: var(--labs-app) }
-        div.category.labs .app:hover { border: 2px outset var(--labs-app); }
-        main[edit] div.category.labs .app:hover  { border: 2px outset var(--primary); }		
+        div.category.labs .app { color: var(--color-labs-app) }
+        div.category.labs .app:hover { border: 2px outset var(--color-labs-app); }
+        main[edit] div.category.labs .app:hover { border: 2px outset var(--color-primary); }
     
         main:not([edit]) .app > ui-checkbox { visibility: hidden }
-        main[edit] .app  { border: 2px outset var(--primary); }
-        main[edit] .app:hover  { border: 2px outset var(--primary); }
-
-          
+        main[edit] .app { border: 2px outset var(--color-primary); }
+        main[edit] .app:hover { border: 2px outset var(--color-primary); }
     </style>  
      
     <script>
@@ -169,17 +107,17 @@
     </script>
 </head>
 
-<body>
+<body class="h-full select-none flex justify-center bg-brand-bg">
 
-    <main>
+    <main class="flex flex-col bg-brand-bg pt-8">
        {{#manifest}}
 
             {{#management}}
-            <div class="title">Data Management</div>
-            <div class="category management">
+            <div class="ml-6 text-border">Data Management</div>
+            <div class="category management flex flex-row flex-wrap m-4 pb-8">
                 {{#apps}}
-                <div class="app" data-name="{{name}}">
-                    <i class="fas fa-3x {{icon}}"></i>
+                <div class="app relative flex flex-col items-center justify-between w-60 h-32 m-2 border border-border bg-white box-border" data-name="{{name}}">
+                    <i class="fas fa-3x {{icon}} mt-2"></i>
                     <p>{{title}}</p>
                     <ui-tooltip hidden>
                         {{{tooltip}}}
@@ -191,11 +129,11 @@
             {{/management}}
             
             {{#presentation}}
-            <div class="title">Presentation</div>
-            <div class="category presentation">
+            <div class="ml-6 text-border">Presentation</div>
+            <div class="category presentation flex flex-row flex-wrap m-4 pb-8">
                 {{#apps}}
-                <div class="app" data-name="{{name}}">
-                    <i class="fas fa-3x {{icon}}"></i>
+                <div class="app relative flex flex-col items-center justify-between w-60 h-32 m-2 border border-border bg-white box-border" data-name="{{name}}">
+                    <i class="fas fa-3x {{icon}} mt-2"></i>
                     <p>{{title}}</p>
                     <ui-tooltip hidden>
                         {{{tooltip}}}
@@ -207,11 +145,11 @@
             {{/presentation}}
         
             {{#productivity}}
-            <div class="title">Productivity</div>
-            <div class="category productivity">
+            <div class="ml-6 text-border">Productivity</div>
+            <div class="category productivity flex flex-row flex-wrap m-4 pb-8">
                 {{#apps}}
-                <div class="app" data-name="{{name}}">
-                    <i class="fas fa-3x {{icon}}"></i>
+                <div class="app relative flex flex-col items-center justify-between w-60 h-32 m-2 border border-border bg-white box-border" data-name="{{name}}">
+                    <i class="fas fa-3x {{icon}} mt-2"></i>
                     <p>{{title}}</p>
                     <ui-tooltip hidden>
                         {{{tooltip}}}
@@ -223,11 +161,11 @@
             {{/productivity}}
             
             {{#labs}}
-            <div class="title">Labs</div>
-            <div class="category labs">
+            <div class="ml-6 text-border">Labs</div>
+            <div class="category labs flex flex-row flex-wrap m-4 pb-8 mb-80">
                 {{#apps}}
-                <div class="app" data-name="{{name}}">
-                    <i class="fas fa-3x {{icon}}"></i>
+                <div class="app relative flex flex-col items-center justify-between w-60 h-32 m-2 border border-border bg-white box-border" data-name="{{name}}">
+                    <i class="fas fa-3x {{icon}} mt-2"></i>
                     <p>{{title}}</p>
                     <ui-tooltip hidden>
                         {{{tooltip}}}
@@ -244,4 +182,3 @@
 </body>
 
 </html>
-            

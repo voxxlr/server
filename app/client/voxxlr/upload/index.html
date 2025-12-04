@@ -5,37 +5,22 @@
     <title>Upload</title>
     <link rel="shortcut icon" href="{{{app_domain}}}/voxxlr/favicon.ico" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{{app_domain}}}/styles-built.css">
     
     <script>
         window.doc_domain = "{{{doc_domain}}}";
         window.app_domain = "{{{app_domain}}}";
-        window.app_domain = "{{{app_domain}}}";
     </script>
-    
-    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
      
-    <script src="{{{app_domain}}}/ui.js"></script>
+    <script type="module" src="{{{app_domain}}}/ui.js"></script>
 
     <script src="{{{app_domain}}}/voxxlr/upload/va-config.js"></script>
     <script src="{{{app_domain}}}/voxxlr/upload/va-dropzone.js"></script>
     <script src="{{{app_domain}}}/voxxlr/upload/va-datasets.js"></script>
 
     <style>
-
-        body {
-            height: 100vh;
-        }
-
-
         ui-section:nth-of-type(1) { width: 20em; }
         ui-section:nth-of-type(2) { flex: 2; }
-
-        main {
-            position: relative;
-            display: flex;
-            align-items: stretch;
-            height: 100%;
-        }
 
         ui-modal > div {
             display: flex;
@@ -43,8 +28,7 @@
         }
 
         ui-stack { flex: 1 }
-        ui-stack > div.datatype 
-        {
+        ui-stack > div.datatype {
             display: flex;
             font-size: 0.7rem;
             height: 100%;
@@ -59,35 +43,30 @@
         }
 
         ui-stack > div.processing[state=STOPPING] button,
-        ui-stack > div.processing[state=STAGING] button 
-        {
+        ui-stack > div.processing[state=STAGING] button {
             display: none;
         }
 
         ui-stack > div.processing span { display: none; }
-
         ui-stack > div.processing[state=STOPPING] span.stopping { display: block; }
         ui-stack > div.processing[state=STAGING] span.staging { display: block; }
 
         .dropzone { flex-grow: 2; }
         va-datasets { font-size: 0.7rem; }
 
-        .options 
-        {
+        .options {
             width: 20em;
             position: relative;
         }
-
-        .options > button  { width: 100%; }
+        .options > button { width: 100%; }
 
         ui-modal > div { margin-bottom: 1em }
         ui-option > span { font-weight: bold; }
         ui-option > p {
             font-size: 0.8em;
             margin-top: 0;
-            color: var(--backgroud);
+            color: var(--color-border);
         }
-                
     </style>  
      
     <script>
@@ -170,7 +149,6 @@
             {
                 let stack = document.querySelector("ui-stack");
                 stack.show(".instructions");
-                //panel.querySelector("button").toggleAttribute("disabled", true);
             });
 
             document.querySelector("va-datasets").addEventListener("select", event =>
@@ -277,13 +255,13 @@
 </head>
 
 
-<body>
+<body class="h-screen">
 
-    <main>
+    <main class="relative flex items-stretch h-full">
         <ui-section label="Datasets">
             <nav>
                 <button name="create" class="vx-primary">Create dataset ...</button>
-                <va-datasets  instances='{{{instances}}}' key='{{{key}}}'></va-datasets>
+                <va-datasets instances='{{{instances}}}' key='{{{key}}}'></va-datasets>
             </nav>
         </ui-section>
         
@@ -331,7 +309,7 @@
                     </div>
                 </div>
                 <div name="panorama" class="datatype">
-                    <va-panorama-zone class="dropzone"  key="{{{key}}}" title="Panoramic Image" waiting></va-panorama-zone>		
+                    <va-panorama-zone class="dropzone" key="{{{key}}}" title="Panoramic Image" waiting></va-panorama-zone>		
                     <div class="options">
                         <button class="vx-primary" disabled>Process ...</button>
                     </div>

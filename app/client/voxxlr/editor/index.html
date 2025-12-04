@@ -19,19 +19,15 @@
     {{/og}}
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{{app_domain}}}/styles-built.css">
 
     <script>
         window.doc_domain = "{{{doc_domain}}}";
         window.app_domain = "{{{app_domain}}}";
-        window.app_domain = "{{{app_domain}}}";
     </script>
         
-        
-    <!-- ui only component -->
-    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
-    <script src="{{{app_domain}}}/ui.js"></script>
+    <script type="module" src="{{{app_domain}}}/ui.js"></script>
     
-    <!-- voxxlr component -->
     <script src="{{{app_domain}}}/vx-viewer.js"></script>
     <script src="{{{app_domain}}}/vx-overlay.js"></script>
     <script src="{{{app_domain}}}/vx-hierarchy.js"></script>
@@ -41,7 +37,6 @@
     <script src="{{{app_domain}}}/vx-viewpoint.js"></script>
     <script src="{{{app_domain}}}/vx-file.js"></script>
     
-    <!-- app components -->
     <script src="{{{app_domain}}}/voxxlr/editor/va-polygon.js"></script>
     <script src="{{{app_domain}}}/voxxlr/editor/va-line.js"></script>
     <script src="{{{app_domain}}}/voxxlr/editor/va-image.js"></script>
@@ -60,10 +55,6 @@
         {
             let viewer = document.querySelector("vx-viewer");
             
-            // 
-            // Header
-            //
- 
             let header = document.querySelector("vx-header");
             header.attach(viewer)
             header.addEventListener("header-inventory", event =>
@@ -92,10 +83,6 @@
                     header.endSave();
                 });
             });
-            
-            // 
-            // Inventory
-            //
 
             let inventory = document.querySelector("vx-inventory");
             inventory.addEventListener("dataset-load", async event=>
@@ -104,9 +91,6 @@
                 document.querySelector("ui-modal").hidden = true;
             });
             
-            //
-            //
-            //
             document.querySelector("vx-overlay").attach(viewer);
 
             let imports = document.querySelector("ui-toggle[left] vx-listing");
@@ -235,10 +219,6 @@
                 document.querySelector("ui-toggle[left] ui-toggle").open();
             });
 
-            //
-            // Startup
-            //
-
             let token = decodeURIComponent("{{{dataset}}}");
             
             {{#password}}
@@ -270,30 +250,7 @@
     </script>
       
     <style>
-        
-        body 
-        { 
-            overflow: hidden; 
-            height:100vh; 
-            width: 100vw;
-            user-select: none; 
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        main
-        {
-            flex: 2;
-            display: flex;
-            align-items: stretch;
-            overflow: hidden;
-            margin-top: 0.5em;
-        }
-        
-        
-        ui-stack > div 
-        { 
+        ui-stack > div { 
             height: 100%;
             overflow: hidden; 
             display: flex;
@@ -301,54 +258,42 @@
             align-items: stretch;
         }
         
-        .search { display: flex; }
-        ui-tag-search { flex: 1 }
-
-        ui-toggle
-        {
-            flex-basis:400px;
+        ui-toggle {
+            flex-basis: 400px;
             flex-shrink: 0;
             z-index: 9;
         }    
 
-        ui-toggle[left]
-        {
+        ui-toggle[left] {
             transition: margin 400ms;
             display: flex;
             flex-direction: column;
-            border-right: solid 1px var(--border); 
+            border-right: solid 1px var(--color-border); 
         }
         ui-toggle[left][open] { margin-left: 0px; }
         ui-toggle[left][close] { margin-left: -400px; }
 
-        ui-toggle[right]
-        {
+        ui-toggle[right] {
             transition: margin 400ms;
             display: flex;
             flex-direction: column;
-            border-left: solid 1px var(--border); 
+            border-left: solid 1px var(--color-border); 
         }
         ui-toggle[right][open] { margin-right: 0px; }
         ui-toggle[right][close] { margin-right: -400px; }
 
         ui-selection-list button { width: 5em; }
-
-        vx-list 
-        {
-            margin-top: 1em;
-            overflow-y: auto;				
-        }
-
+        ui-tag-search { flex: 1 }
+        vx-list { margin-top: 1em; overflow-y: auto; }
         vx-hierarchy { width: 400px; }
         vx-dataset-info { margin-top: auto; }
-            
-     </style>
+    </style>
 </head>
 
-<body>
+<body class="overflow-hidden h-screen w-screen select-none m-0 flex flex-col">
      
     <vx-header save launch></vx-header>
-    <main>
+    <main class="flex-2 flex items-stretch overflow-hidden mt-2">
         <ui-toggle left close>
             <ui-stack>
                 <div active>
@@ -375,7 +320,7 @@
                     <vx-overlay></vx-overlay>
                 </div>
                 <div>
-                    <div class="search">
+                    <div class="flex">
                         <ui-tag-search></ui-tag-search>
                         <button class="vx-secondary"><i class="fas fa-times-circle vx-secondary"></i></button>
                     </div>

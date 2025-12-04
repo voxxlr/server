@@ -3,7 +3,7 @@
 <head>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
+    <link rel="stylesheet" href="{{{app_domain}}}/styles-built.css">
 
     <script>
         window.doc_domain = "{{{doc_domain}}}";
@@ -11,8 +11,8 @@
     </script>
     
     <!-- Voxxlr UI components -->    
-    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
-    <script src="{{{app_domain}}}/ui.js"></script>
+    <link rel="stylesheet" href="{{{app_domain}}}/styles-built.css">
+    <script type="module" src="{{{app_domain}}}/ui.js"></script>
     <script src="{{{app_domain}}}/vx-inventory.js"></script>
     <script src="{{{app_domain}}}/vx-viewer.js"></script>
 
@@ -41,7 +41,7 @@
 
         #sent, #received {
             text-align: center;
-            color: var(--primary);
+            color: var(--color-primary);
             height: 1.5em;
             font-weight: bold;
         }
@@ -105,7 +105,7 @@
         aside > ui-panel p {
             font-style: italic;
             font-weight: bold;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--color-border);
         }
 
         aside > ui-panel > div { display: flex; }
@@ -113,7 +113,7 @@
         aside > ui-panel[name=Instructions] > span {
             width: 50%;
             text-align: center;
-            color: var(--important);
+            color: var(--color-important);
             font-weight: bold;
         }
 
@@ -129,8 +129,8 @@
 
         li { line-height: 1.4em; }
         li.sep { margin-top: 0.5em; }
-        li.disabled { color: var(--border); }
-        li:not(.disabled):hover { background-color: var(--hover); }
+        li.disabled { color: var(--color-border); }
+        li:not(.disabled):hover { background-color: var(--color-hover); }
 
         ul {
             list-style-type: none;
@@ -363,19 +363,6 @@
                 document.querySelectorAll(".map").forEach(entry => entry.toggleAttribute("hidden", true));
 
                 document.querySelectorAll(`.${event.type}`).forEach(entry => entry.toggleAttribute("hidden", false));
-
-                /*
-                let type = document.getElementById("models").getSelected();
-
-                let navcube = document.querySelector(`div[slot="${type}"] .navcube`);
-                if (navcube) {
-                    navcube.classList.toggle("disabled", false);
-                }
-                let target = document.querySelector(`div[slot="${type}"] .target`);
-                if (target) {
-                    target.classList.toggle("disabled", false);
-                }
-                */
             });
 
 
@@ -387,15 +374,6 @@
             document.querySelector("ui-panel[name=Messages] button").addEventListener("click", async (event) => {
                 let content = JSON.parse(sentContent.value);
 
-                /*
-                if (sentType.textContent.textContent == "point.create")
-                {
-                    for (f in content.code)
-                    {
-                        content.code[f] = encodeURI(content.code[f]);
-                    }
-                }
-                */
                 let resonse = await viewer.wait(sentType.textContent, content);
                 if (sentType.textContent.textContent == "viewer.image.get") {
                     receivedContent.textContent = resonse;
@@ -411,7 +389,6 @@
                     let li = event.target.closest("li");
                     if (li && !li.classList.contains("disabled")) {
                         if (MESSAGES[li.textContent]) {
-                            // display the comments
                             if (COMMENTS_SEND[li.textContent]) {
                                 document.getElementById("comments").textContent = COMMENTS_SEND[li.textContent];
                             }
@@ -419,30 +396,13 @@
                                 document.getElementById("comments").textContent = "";
                             }
 
-                            // display object in sent message window
-                            /*
-                            if (li.textContent == "point.create")
-                            {
-                                let content = JSON.parse(JSON.stringify(MESSAGES[li.textContent]));
-                                for (f in content.code)
-                                {
-                                    content.code[f] = decodeURI(content.code[f]);
-                                    content.code[f] = content.code[f].replace('\\n', '\n');
-                                    //content.code[f] = content.code[f].replace(/(\r\n|\n|\r)/gm, "\n");
-                                }
-                                sentContent.value = JSON.stringify(content, null, "  ");
-                            }
-                            */
-
                             sentContent.value = JSON.stringify(MESSAGES[li.textContent], null, "  ");
                             sentType.textContent = li.textContent;
 
-                            // send message and wait for response
                             receivedContent.textContent = "";
                             let response = await viewer.wait(li.textContent, MESSAGES[li.textContent]);
                             receivedType.textContent = li.textContent;
 
-                            // display object in recived message window
                             if (sentContent.value == "viewer.image.get") {
                                 receivedContent.textContent = response;
                             }
@@ -450,7 +410,6 @@
                                 receivedContent.textContent = JSON.stringify(response, null, "  ");
                             }
 
-                            // display the comments
                             if (COMMENTS_RECV[li.textContent]) {
                                 document.getElementById("comments").textContent = COMMENTS_RECV[li.textContent];
                             }
@@ -458,7 +417,6 @@
                                 document.getElementById("comments").textContent = "";
                             }
 
-                            // enable/disable other message types
                             if (ENABLE[li.textContent]) {
                                 ENABLE[li.textContent].forEach(entry => {
                                     document.getElementById(entry).classList.toggle("disabled", false);
@@ -470,7 +428,6 @@
                                 })
                             }
 
-                            // recived message content to another message
                             if (COPY[li.textContent]) {
                                 if (COPY_FIELDS[li.textContent]) {
                                     COPY_FIELDS[li.textContent].forEach(field => {
@@ -535,16 +492,6 @@
                 }
             });
 
-            /*
-            document.querySelector("ui-selection-list").addEventListener("down", async (event) => {
-                document.querySelectorAll("aside li").forEach(item => {
-                    item.classList.toggle("disabled", true);
-                })
-
-                viewer.load(token[event.detail.id]);
-            });
-                */
-
             {{^dataset}}
             document.getElementById("inventory-dialog").hidden = false;
             document.querySelector("iv-list").addEventListener("dataset-load", event =>
@@ -606,7 +553,6 @@
         </ui-panel>
 
         <ui-panel important name="Send Message">
-            <!--<span style="color:grey"> all messages are mirrored back</span>-->
             <div class="viewer">
                 <ul>
                     <li id="viewer.unload" class="disabled">viewer.unload</li>
@@ -682,7 +628,6 @@
             <div class="model" hidden>
                 <ul>
                     <li id="model.hierarchy.get" class="disabled">model.hierarchy.get</li>
-                    <!-- <li id=""  class="disabled">model.materials.get</li>  -->
                     <li id="navcube" class="navcube sep disabled">navcube</li>
                     <li id="target" class="target disabled">target</li>
                 </ul>

@@ -20,21 +20,19 @@
     {{/og}}
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{{app_domain}}}/styles-built.css">
     
     <script>
         window.doc_domain = "{{{doc_domain}}}";
         window.app_domain = "{{{app_domain}}}";
-        window.app_domain = "{{{app_domain}}}";
     </script>
  
-    <script src="{{{app_domain}}}/ui.js"></script>
+    <script type="module" src="{{{app_domain}}}/ui.js"></script>
     <script src="{{{app_domain}}}/vx-inventory.js"></script>
     <script src="{{{app_domain}}}/vx-viewer.js"></script>
 
     <script src="{{{app_domain}}}/voxxlr/viewer/va-images.js"></script>
     <script src="{{{app_domain}}}/voxxlr/viewer/va-sticky.js"></script>
-
-    <link rel="stylesheet" href="{{{app_domain}}}/ui.css">
 
     <script>
     
@@ -261,113 +259,81 @@
     
 
     <style>
-    
-        html, body 
-        { 
-            user-select: none; 
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow:hidden;
-            border: none;
-            margin: 0;
-            font-size: 13px;
-            font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
-        }
-        
-        body  { display: flex; }
-        iframe { border: none }
-                
-        aside
-        {
+        aside {
             position: relative;
             width: 400px;
-            border-right: solid 1px var(--border); 
+            border-right: solid 1px var(--color-border); 
             padding: 30px 30px;
             background: #222;
             transition: margin-left .3s linear;
             z-index: 9;
         }
         aside.closed { margin-left: -460px; }
-        aside h2  { color: #fff; }
-        aside h4  { color: rgb(0, 102, 204); margin: 0; font-size: 1.2em; }
-        aside p  { margin: 0; color: #888; }
-        aside .viewpoint
-        {
+        aside h2 { color: #fff; }
+        aside h4 { color: rgb(0, 102, 204); margin: 0; font-size: 1.2em; }
+        aside p { margin: 0; color: #888; }
+        aside .viewpoint {
             position: relative;
-            margin-top:1em;
-            padding: 1.0em 0.8em 1.0em 0.8em;
+            margin-top: 1em;
+            padding: 1em 0.8em;
             border: 1px solid white;
         }
         aside .viewpoint p { color: #fff; }
         aside .viewpoint:hover { background: #444; }
-        aside .viewpoint.selected 
-        { 
-            border: 2px solid rgb(0, 102, 204);;
+        aside .viewpoint.selected { 
+            border: 2px solid rgb(0, 102, 204);
             background: #444; 
         }
-        aside hr  { margin-bottom: 50px; }
-        aside .logo 
-        {
+        aside hr { margin-bottom: 50px; }
+        aside .logo {
             width: 120px;
             height: 120px;
             margin-left: 40px;
             margin-bottom: 60px;
             display: block;
         }
-        aside .powered
-        {
-            position:absolute;
+        aside .powered {
+            position: absolute;
             font-size: 12px;
             right: 35px;
             top: 140px;
             color: #888;
         }		
         
-        aside a.open
-        {
-            position:absolute;
+        aside a.open {
+            position: absolute;
             right: 0;
             top: 20px;
             margin-right: -32px;
         }
 
-        aside a.home
-        {
-            display:  block;
-        }
+        aside a.home { display: block; }
         
-        vx-viewer
-        {
+        vx-viewer {
             position: relative; 
             flex-grow: 2; 
             width: 100%;
             height: 100%;
         }
         
-        va-sticky > div
-        {
+        va-sticky > div {
             background: #222;
-            color:  white;
+            color: white;
             padding: 1em;
         }
         
-        #link-dialog iframe
-        {
+        #link-dialog iframe {
             position: relative;
             height: 60vh;
             width: 60vw;
         }
         
-        
-         button[name='inventory'] 
-        {
+        button[name='inventory'] {
             position: absolute;
             top: 0.5em;
             right: 0.5em;
         }
-        
-     </style>
+    </style>
         
 </head>
 
@@ -379,7 +345,7 @@
 </template>
 
 
-<body>
+<body class="select-none relative w-full h-full overflow-hidden border-none m-0 text-sm font-sans flex">
 
     <aside class="closed">
         <a class="open"><img src="{{{app_domain}}}/voxxlr/viewer/images/open.webp"></a>
@@ -398,7 +364,7 @@
         <button name="inventory" class="vx-primary">
             <i class="far fa-map"></i>
             <ui-tooltip hidden>
-                <p style="width: 15em;">Open the Explorer to select a different dataset. This button will not be visible when the App is shared.</p>
+                <p class="w-60">Open the Explorer to select a different dataset. This button will not be visible when the App is shared.</p>
             </ui-tooltip>				
         </button>
     
@@ -412,7 +378,7 @@
     </ui-modal>
     
     <ui-modal id="link-dialog" hidden close>
-        <iframe src ="" style=" resize: both;"></iframe>
+        <iframe class="border-none resize" src =""></iframe>
     </ui-modal>
     
 
